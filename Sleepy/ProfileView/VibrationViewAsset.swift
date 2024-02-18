@@ -70,6 +70,8 @@ struct VibrationViewAsset: View {
         // Добавил colorScheme
         .background(Color.black)
         .colorScheme(.dark)
+        
+        // test
     }
 }
 
