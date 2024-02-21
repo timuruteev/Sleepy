@@ -27,7 +27,8 @@ struct FirstAlarm: View {
     @State private var wakeUpTime = Date()
     @State private var selectedTab = "Сон"
     @State private var alarmIndex = 0
-
+    @State private var isPresented = false
+    
     // Создайте DateFormatter
     let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
@@ -56,7 +57,9 @@ struct FirstAlarm: View {
                         .multilineTextAlignment(.center)
                 }
                 Spacer()
-                Button(action: {}) {
+                Button(action: {
+                    isPresented = !isPresented
+                }) {
                     Text("Старт")
                         .font(.system(size: 20)) // Уменьшаем размер шрифта
                         .fontWeight(.bold)
@@ -65,6 +68,9 @@ struct FirstAlarm: View {
                         .background(Color.orange) // Меняем цвет на оранжевый
                         .cornerRadius(50) // Увеличиваем радиус скругления
                 }
+                .sheet(isPresented: $isPresented, content: {
+                    TimerView(wakeUpTime: $wakeUpTime)
+                })
                 .padding(.horizontal)
                 Spacer()
             }
