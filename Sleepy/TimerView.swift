@@ -4,7 +4,13 @@ struct TimerView: View {
     @State private var time = Date()
     @Binding var wakeUpTime: Date // Используем @Binding для получения значения из FirstAlarm
     @Environment(\.presentationMode) var presentationMode // Добавьте эту строку
-    
+    @ObservedObject var audioPlayer: AudioPlayer // Добавьте это свойство
+        
+        // Добавьте параметр audioPlayer в конструктор и присвойте его свойству
+        init(wakeUpTime: Binding<Date>, audioPlayer: AudioPlayer) {
+            self._wakeUpTime = wakeUpTime
+            self.audioPlayer = audioPlayer
+        }
     var body: some View {
         ZStack {
             
@@ -35,6 +41,7 @@ struct TimerView: View {
                                     .foregroundColor(.white)
                                     .padding(.bottom, 20)
                 Button(action: {
+                    audioPlayer.playOrPause()
                     presentationMode.wrappedValue.dismiss() // Измените эту строку
                 }) {
                     Text("Отмена")
@@ -54,5 +61,5 @@ struct TimerView: View {
 
 
 #Preview {
-    TimerView(wakeUpTime: .constant(Date()))
+    TimerView(wakeUpTime: .constant(Date()), audioPlayer: AudioPlayer (sound: "alarm"))
 }
