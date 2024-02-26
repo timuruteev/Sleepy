@@ -4,13 +4,9 @@ struct TimerView: View {
     @State private var time = Date()
     @Binding var wakeUpTime: Date // Используем @Binding для получения значения из FirstAlarm
     @Environment(\.presentationMode) var presentationMode // Добавьте эту строку
-    @ObservedObject var audioPlayer: AudioPlayer // Добавьте это свойство
-        
-        // Добавьте параметр audioPlayer в конструктор и присвойте его свойству
-        init(wakeUpTime: Binding<Date>, audioPlayer: AudioPlayer) {
-            self._wakeUpTime = wakeUpTime
-            self.audioPlayer = audioPlayer
-        }
+    @ObservedObject var audioPlayer: AudioPlayer // Добавьте эту строку
+    let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect() // Добавьте эту строку
+    
     var body: some View {
         ZStack {
             
@@ -41,8 +37,14 @@ struct TimerView: View {
                                     .foregroundColor(.white)
                                     .padding(.bottom, 20)
                 Button(action: {
+                    // Измените действие кнопки Отмена
+                    // Получаем текущее время в формате часов и минут
+                    isPlayed.isPlaying = true
                     audioPlayer.playOrPause()
-                    presentationMode.wrappedValue.dismiss() // Измените эту строку
+                        // Установите isPlaying в false, чтобы отобразить правильное состояние проигрывателя
+                    isPlayed.isPlaying = false
+                    isPlayed.index = 1
+                    presentationMode.wrappedValue.dismiss() // Закройте модальное окно              
                 }) {
                     Text("Отмена")
                                             
@@ -55,11 +57,12 @@ struct TimerView: View {
                 }
             }
         }
+        
     }
 }
 
 
 
 #Preview {
-    TimerView(wakeUpTime: .constant(Date()), audioPlayer: AudioPlayer (sound: "alarm"))
+    TimerView(wakeUpTime: .constant(Date()), audioPlayer: AudioPlayer(sound: "alarm")) // Добавьте аргумент audioPlayer
 }

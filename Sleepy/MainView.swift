@@ -1,8 +1,6 @@
 import SwiftUI
 import AVFoundation
 
-
-
 struct MainView: View {
     @State private var selectedTab = 0
     @State private var selectedButton = "Сон"
@@ -27,10 +25,13 @@ struct MainView: View {
     }
 }
 
+class isPlayed{
+    static var isPlaying = false
+    static var index = 0
+}
 class AudioPlayer: NSObject, ObservableObject {
     // Свойство, которое хранит экземпляр AVAudioPlayer
     private var audioPlayer: AVAudioPlayer?
-      @Published var isPlaying = false
     
     // Инициализатор, который принимает имя файла звука
     init(sound: String) {
@@ -47,20 +48,23 @@ class AudioPlayer: NSObject, ObservableObject {
         }
     }
     
-    
+
     // Метод, который воспроизводит или приостанавливает звук
     func playOrPause() {
         guard let player = audioPlayer else { return }
 
-            if player.isPlaying {
-              player.pause()
-              isPlaying = false
-            } else {
+        
+            // Измените логику метода playOrPause
+            if isPlayed.isPlaying {
+              player.stop()
+                isPlayed.isPlaying = false            } else {
               player.play()
-              isPlaying = true
+                    isPlayed.isPlaying = true
             }
+        
+        }
     }
-}
+
 
 // Расширяем класс AudioPlayer, чтобы он соответствовал протоколу AVAudioPlayerDelegate
 extension AudioPlayer: AVAudioPlayerDelegate {
@@ -82,6 +86,9 @@ struct FirstAlarm: View {
     // Создаем экземпляр AudioPlayer с именем файла звука
     @StateObject private var audioPlayer = AudioPlayer(sound: "alarm")
     
+    // Создаем таймер, который будет запускаться каждую секунду
+    let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+    
     // Создаем переменную состояния, которая будет хранить, была ли нажата кнопка старт
     @State private var isStarted = false
     
@@ -98,8 +105,8 @@ struct FirstAlarm: View {
                 Spacer()
                 VStack(spacing: 10) {
                     DatePicker("", selection: $wakeUpTime, displayedComponents: .hourAndMinute) // элемент выбора времени
-                        .datePickerStyle(.wheel)
-                        .labelsHidden()
+                        .datePickerStyle(.wheel) // стиль элемента
+                        .labelsHidden() // скрыть метки
                         .preferredColorScheme(.dark)
                     Text("Просыпайтесь легко между")
                         .font(.system(size: 20))
@@ -116,36 +123,43 @@ struct FirstAlarm: View {
                 Button(action: {
                     isPresented = !isPresented
                     // Вызываем метод playOrPause на нашем AudioPlayer при нажатии кнопки
+                    // audioPlayer.playOrPause() // Убираем эту строку, так как мы не хотим воспроизводить звук при нажатии кнопки
                     // Устанавливаем переменную isStarted в true, чтобы показать, что кнопка старт была нажата
                     isStarted = true
-                    // Вместо того, чтобы создавать таймер, который запускается каждую секунду, создайте таймер, который запускается только один раз в нужное время
-                    // Вычислите интервал времени, как разницу между временем пробуждения и текущим временем
-                    let interval = wakeUpTime.timeIntervalSince(Date())
-                    // Создайте таймер, который запустится через интервал времени, не будет повторяться и выполнит блок кода
-                    let timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: false) { _ in
-                        // В блоке кода воспроизведите звук, если переменная isStarted равна true и звук еще не играет
-                        if isStarted && !audioPlayer.isPlaying {
-                            audioPlayer.playOrPause()
-                        }
-                    }
+                    isPlayed.index = 0
                 }) {
                     Text("Старт")
                         .font(.system(size: 20)) // Уменьшаем размер шрифта
                         .fontWeight(.bold)
                         .foregroundColor(.white)
-                        .padding(EdgeInsets(top: 15, leading: 50, bottom: 15, trailing: 50))
-                        .background(Color.orange)
-                        .cornerRadius(50)
+                        .padding(EdgeInsets(top: 15, leading: 50, bottom: 15, trailing: 50)) // Увеличиваем горизонтальные отступы
+                        .background(Color.orange) // Меняем цвет на оранжевый
+                        .cornerRadius(50) // Увеличиваем радиус скругления
                 }
                 .sheet(isPresented: $isPresented, content: {
-                    TimerView(wakeUpTime: $wakeUpTime, audioPlayer: audioPlayer) // Добавьте этот параметр
+                    TimerView(wakeUpTime: $wakeUpTime, audioPlayer: audioPlayer) // Передаем объект audioPlayer в TimerView
                 })
                 .padding(.horizontal)
                 Spacer()
             }
         }
+        // Добавляем модификатор onReceive, который будет получать события от таймера
+        .onReceive(timer) { _ in
+                            // Получаем текущее время в формате часов и минут
+                            let currentTime = dateFormatter.string(from: Date())
+                            // Получаем время пробуждения в том же формате
+                            let alarmTime = dateFormatter.string(from: wakeUpTime)
+                            // Сравниваем их, и если они совпадают, то воспроизводим звук
+                            // Но только если переменная isStarted равна true, то есть кнопка старт была нажата
+                            // И только если звук еще не играет, чтобы не прерывать его
+            if currentTime == alarmTime && isStarted && !isPlayed.isPlaying && isPlayed.index == 0{
+                                audioPlayer.playOrPause()
+            }
+        }
     }
 }
+
+
 
 struct SecondAlarm: View {
     @State private var wakeUpTime = Date()
