@@ -10,24 +10,31 @@ struct SongsViewAsset: View {
     
     var body: some View {
         VStack {
-            Text(audioFileName)
-                .font(.title)
+            HStack {
+                Button(action: {
+                    playOrPause()
+                }) {
+                    Image(systemName: isPlaying ? "pause.circle" : "play.circle")
+                        .resizable()
+                        .frame(width: 32, height: 32) // Уменьшите размер кнопки
+                }
                 .padding()
-            Text(audioDuration)
-                .font(.subheadline)
-                .padding()
-            Button(action: {
-                playOrPause()
-            }) {
-                Image(systemName: isPlaying ? "pause.circle" : "play.circle")
-                    .resizable()
-                    .frame(width: 64, height: 64)
+                .alignmentGuide(.leading) { _ in 0 }
+                
+                Spacer() // Добавьте пробел между кнопкой и текстом
+                
+                VStack(alignment: .trailing) { // Выровняйте текст по правому краю
+                    Text(audioFileName)
+                        .font(.subheadline)
+                    Text(audioDuration)
+                        .font(.subheadline)
+                }
             }
-            .padding()
         }
         .onAppear() {
             loadAudioFile()
         }
+        
     }
     
     // Добавьте этот метод для загрузки аудиофайла из папки документов
@@ -43,6 +50,7 @@ struct SongsViewAsset: View {
                 // Сохраните URL, имя и продолжительность файла
                 self.audioFileURL = audioFileURL
                 audioFileName = audioFileURL.lastPathComponent
+                
                 audioDuration = formatTime(audioPlayer?.duration ?? 0)
             } else {
                 // Если файл не найден, выведите сообщение об ошибке
@@ -77,5 +85,6 @@ struct SongsViewAsset: View {
 struct SongsViewAsset_Previews: PreviewProvider {
     static var previews: some View {
         SongsViewAsset()
+            .background(Color.black)
     }
 }
