@@ -1,11 +1,12 @@
 import SwiftUI
+import AVFoundation
 
 struct TimerView: View {
     @State private var time = Date()
     @Binding var wakeUpTime: Date // Используем @Binding для получения значения из FirstAlarm
     @Environment(\.presentationMode) var presentationMode // Добавьте эту строку
     @ObservedObject var audioPlayer: AudioPlayer // Добавьте эту строку
-    let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect() // Добавьте эту строку
+    let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     
     var body: some View {
         ZStack {
@@ -55,11 +56,25 @@ struct TimerView: View {
                                         .background(Color.red)
                                         .cornerRadius(50)
                 }
+                .onAppear() {
+                        // Добавьте этот код
+                        // Создайте объект сессии аудио
+                        let audioSession = AVAudioSession.sharedInstance()
+                        do {
+                            // Активируйте сессию аудио с категорией воспроизведения
+                            try audioSession.setCategory(.playback)
+                            try audioSession.setActive(true)
+                        } catch {
+                            // Обработайте возможные ошибки
+                            print("Failed to activate audio session: \(error)")
+                        }
+                    }
+                }
             }
         }
         
     }
-}
+
 
 
 
