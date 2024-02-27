@@ -35,7 +35,7 @@ struct JournalView: View {
                 QualityViewAsset()
                 GraphicViewAsset()
                 ShortViewAsset()
-                MusicViewAsset()
+                SongsViewAsset()
                 Spacer()
                 Spacer()
             }

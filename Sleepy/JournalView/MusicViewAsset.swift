@@ -9,7 +9,7 @@ struct MusicViewAsset: View {
                 .foregroundColor(.white) // Add this modifier to make the title white
                 .fontWeight(.bold) // Add this modifier to make the title bold
 
-            SoundView(timeRange: "22:00-23:00")
+            SoundView(timeRange: " ")
             SoundView(timeRange: "23:00-00:00")
             SoundView(timeRange: "00:00-01:00")
         }
