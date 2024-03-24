@@ -1,11 +1,12 @@
 import SwiftUI
 import AVFoundation
+import SQLite
 
-struct MainView: View {
+struct MainView: SwiftUI.View {
     @State private var selectedTab = 0
     @State private var selectedButton = "Сон"
     
-    var body: some View {
+    var body: some SwiftUI.View {
         ZStack {
             TabView(selection: $selectedTab) {
                 FirstAlarm()
@@ -77,7 +78,8 @@ extension AudioPlayer: AVAudioPlayerDelegate {
     }
 }
 
-struct FirstAlarm: View {
+
+struct FirstAlarm: SwiftUI.View {
     @State private var wakeUpTime = Date()
     @State private var selectedTab = "Сон"
     @State private var alarmIndex = 0
@@ -88,7 +90,6 @@ struct FirstAlarm: View {
     
     // Создаем таймер, который будет запускаться каждую секунду
     let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
-    
     // Создаем переменную состояния, которая будет хранить, была ли нажата кнопка старт
     @State private var isStarted = false
     
@@ -98,8 +99,9 @@ struct FirstAlarm: View {
         formatter.timeStyle = .short
         return formatter
     }()
+
     
-    var body: some View {
+    var body: some SwiftUI.View {
         ZStack {
             VStack(spacing: 30) {
                 Spacer()
@@ -121,13 +123,45 @@ struct FirstAlarm: View {
                 }
                 Spacer()
                 Button(action: {
-                    isPresented = !isPresented
-                    // Вызываем метод playOrPause на нашем AudioPlayer при нажатии кнопки
-                    // audioPlayer.playOrPause() // Убираем эту строку, так как мы не хотим воспроизводить звук при нажатии кнопки
-                    // Устанавливаем переменную isStarted в true, чтобы показать, что кнопка старт была нажата
+                    let currentDate = Date()
                     isStarted = true
-                    isPlayed.index = 0
+                    isPresented = !isPresented
+
+                    // Форматирование даты и времени для записи в базу данных
+                    let dateFormatter = DateFormatter()
+                    dateFormatter.dateFormat = "yyyy-MM-dd"
+                    let dateAlarm = dateFormatter.string(from: currentDate)
+                    
+                    let timeFormatter = DateFormatter()
+                    timeFormatter.dateFormat = "HH:mm:ss"
+                    let startTime = timeFormatter.string(from: currentDate)
+                    
+                    // Путь к файлу базы данных в проекте
+                    let path = Bundle.main.path(forResource: "Sleepy", ofType: "db")!
+                    let db = try! Connection(path, readonly: false)
+                    
+                    // Определение таблицы
+                    let statistic = Table("Statistic")
+                    let idAlarm = Expression<Int64>("IdAlarm")
+                    let dateAlarmExpr = Expression<String>("DateAlarm")
+                    let startTimeExpr = Expression<String>("StartTime")
+                    let endTimeExpr = Expression<String>("EndTime")
+                    
+                    // Вставка данных в таблицу
+                    let insert = statistic.insert(dateAlarmExpr <- dateAlarm, startTimeExpr <- startTime, endTimeExpr <- startTime)
+                    try! db.run(insert)
+                    
+                    // Проверка вставки данных
+                    let query = statistic.select(*)
+                    do {
+                        for row in try db.prepare(query) {
+                            print("IdAlarm: \(row[idAlarm]), DateAlarm: \(row[dateAlarmExpr]), StartTime: \(row[startTimeExpr]), EndTime: \(row[endTimeExpr])")
+                        }
+                    } catch {
+                        print("Ошибка при выборке данных: \(error)")
+                    }
                 }) {
+                
                     Text("Старт")
                         .font(.system(size: 20)) // Уменьшаем размер шрифта
                         .fontWeight(.bold)
@@ -161,7 +195,7 @@ struct FirstAlarm: View {
 
 
 
-struct SecondAlarm: View {
+struct SecondAlarm: SwiftUI.View {
     @State private var wakeUpTime = Date()
     @State private var selectedTab = "Сон"
     @State private var alarmIndex = 1
@@ -173,7 +207,7 @@ struct SecondAlarm: View {
         return formatter
     }()
 
-    var body: some View {
+    var body: some SwiftUI.View {
         ZStack {
             VStack(spacing: 30) {
                 Spacer()
@@ -211,12 +245,12 @@ struct SecondAlarm: View {
     }
     
     
-    struct ThirdAlarm: View {
+    struct ThirdAlarm: SwiftUI.View {
         @State private var wakeUpTime = Date()
         @State private var selectedTab = "Сон"
         @State private var alarmIndex = 2
         
-        var body: some View {
+        var body: some SwiftUI.View {
             ZStack {
                 VStack(spacing: 30) {
                     Spacer()
@@ -261,7 +295,7 @@ struct SecondAlarm: View {
     
     
     struct MainView_Previews: PreviewProvider {
-        static var previews: some View {
+        static var previews: some SwiftUI.View {
             MainView()
         }
     }

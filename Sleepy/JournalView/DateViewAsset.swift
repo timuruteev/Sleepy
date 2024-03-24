@@ -36,18 +36,6 @@ struct DateViewAsset: View {
                 .padding(.leading, 20)
                 .baselineOffset(-5)
             Spacer()
-            Button(action: {
-                // Обработка нажатия кнопки
-            }) {
-                Image(systemName: "calendar")
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 18, height: 18)
-                    .foregroundColor(.blue)
-                    .padding(10)
-                    .background(Color.blue.opacity(0.2))
-                    .clipShape(Circle())
-            }
         }
         .padding()
 

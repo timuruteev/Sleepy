@@ -1,5 +1,6 @@
 import SwiftUI
 
+
 struct MainWindowView: View {
     // переменная для хранения выбранной вкладки
     @State private var selection = 0

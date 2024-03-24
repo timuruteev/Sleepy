@@ -93,7 +93,8 @@ struct ShortViewAsset: View {
 
             }
             .padding(.bottom, 20) // Добавление отступа сверху
-
+            Divider()
+                .background(Color.gray)
         }
     }
 }

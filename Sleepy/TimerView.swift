@@ -147,3 +147,5 @@ struct TimerView: View {
 #Preview {
     TimerView(wakeUpTime: .constant(Date()), audioPlayer: AudioPlayer(sound: "alarm")) // Добавьте аргумент audioPlayer
 }
+
+
