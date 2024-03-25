@@ -1,9 +1,11 @@
 import SwiftUI
 import AVFoundation
+import SQLite
 
-struct TimerView: View {
+struct TimerView: SwiftUI.View {
     @State private var time = Date()
-    @Binding var wakeUpTime: Date // Используем @Binding для получения значения из FirstAlarm
+    @SwiftUI.Binding var wakeUpTime: Date
+    @State private var cancelTime: Date?
     @Environment(\.presentationMode) var presentationMode // Добавьте эту строку
     @ObservedObject var audioPlayer: AudioPlayer // Добавьте эту строку
     let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
@@ -13,7 +15,50 @@ struct TimerView: View {
     @State private var isRecording = false
     @State private var audioFileURL: URL?
     
-    var body: some View {
+    func updateEndTime() {
+        guard let cancelTime = cancelTime else { return }
+        
+        // Форматирование времени для записи в базу данных
+        let timeFormatter = DateFormatter()
+        timeFormatter.dateFormat = "HH:mm:ss"
+        let endTime = timeFormatter.string(from: cancelTime)
+        
+        // Путь к файлу базы данных в проекте
+        let path = Bundle.main.path(forResource: "Sleepy", ofType: "db")!
+        let db = try! Connection(path, readonly: false)
+        
+        // Определение таблицы и выражений
+        let statistic = Table("Statistic")
+        let idAlarm = Expression<Int64>("IdAlarm")
+        let endTimeExpr = Expression<String>("EndTime")
+        
+        // Обновление endTime в последней записи
+        if let lastId = try? db.scalar(statistic.select(idAlarm.max)) {
+            let query = statistic.filter(idAlarm == lastId)
+            try! db.run(query.update(endTimeExpr <- endTime))
+            
+            displayUpdatedData(db: db, statistic: statistic)
+        }
+    }
+    
+    func displayUpdatedData(db: Connection, statistic: SQLite.Table) {
+        let idAlarm = Expression<Int64>("IdAlarm")
+        let dateAlarmExpr = Expression<String>("DateAlarm")
+        let startTimeExpr = Expression<String>("StartTime")
+        let endTimeExpr = Expression<String>("EndTime")
+        
+        // Выборка и вывод данных
+        let query = statistic.select(*)
+        do {
+            for row in try db.prepare(query) {
+                print("IdAlarm: \(row[idAlarm]), DateAlarm: \(row[dateAlarmExpr]), StartTime: \(row[startTimeExpr]), EndTime: \(row[endTimeExpr])")
+            }
+        } catch {
+            print("Ошибка при выборке данных: \(error)")
+        }
+    }
+
+    var body: some SwiftUI.View {
         ZStack {
                 let dateFormatter: DateFormatter = {
                 let formatter = DateFormatter()
@@ -32,7 +77,9 @@ struct TimerView: View {
                         let formatter = DateFormatter()
                         formatter.dateFormat = "HH:mm"
                         let dateString = formatter.string(from: wakeUpTime)
-                        wakeUpTime = formatter.date(from: dateString) ?? Date()
+                        DispatchQueue.main.async {
+                            self.wakeUpTime = formatter.date(from: dateString) ?? Date()
+                        }
                     }
                 Text("Будильник \(wakeUpTime.addingTimeInterval(-30*60), formatter: dateFormatter) – \(wakeUpTime, formatter: dateFormatter)")
                                     .font(.system(size: 20))
@@ -44,7 +91,9 @@ struct TimerView: View {
                     audioPlayer.playOrPause()
                     isPlayed.isPlaying = false
                     isPlayed.index = 1
+                    cancelTime = Date()
                     presentationMode.wrappedValue.dismiss()
+                    updateEndTime()
                 }) {
                     Text("Отмена")
                                             
@@ -141,6 +190,8 @@ struct TimerView: View {
         // Например, вы можете добавить опцию "Слушать", "Сохранить", "Удалить" или "Отменить"
         // В этом примере мы просто сохраняем файл в папке документов
         print("Saved audio file at \(audioFileURL!)")
+        
+        
     }
 }
 
