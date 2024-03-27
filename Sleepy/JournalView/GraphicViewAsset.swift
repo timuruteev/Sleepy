@@ -27,9 +27,7 @@ struct GraphicViewAsset: View {
     }
 }
 
-struct GraphicViewAsset_Previews: PreviewProvider {
-    static var previews: some View {
-        GraphicViewAsset()
-            .background(.black)
-    }
+#Preview {
+    GraphicViewAsset()
+        .background(.black)
 }

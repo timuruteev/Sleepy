@@ -3,26 +3,17 @@ import SwiftUI
 struct WeekViewAsset: View {
     @Binding var selectedDate: Date
     
-    let daysOfWeek = ["ПН", "ВТ", "СР", "ЧТ", "ПТ", "СБ", "ВС"]
-    
-    // Функция для получения даты для каждого дня недели
-    func dateForDay(index: Int) -> Date {
-        let calendar = Calendar.current
-        let startOfWeek = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: selectedDate))!
-        return calendar.date(byAdding: .day, value: index, to: startOfWeek)!
-    }
-    
     var body: some View {
         HStack(spacing: 20) {
-            ForEach(0..<7, id: \.self) { index in
+            ForEach((1...7).reversed(), id: \.self) { index in
                 Button(action: {
-                    self.selectedDate = self.dateForDay(index: index)
+                    self.selectedDate = self.dateFor(index: index)
                 }) {
                     ZStack {
                         Circle()
                             .stroke(lineWidth: 7)
-                            .foregroundColor(Color.blue)
-                        Text(daysOfWeek[index])
+                            .foregroundColor(index == 1 ? Color.blue : Color.blue)
+                        Text(self.dayOfWeek(for: self.dateFor(index: index)))
                             .font(.subheadline)
                             .foregroundColor(.white)
                     }
@@ -32,11 +23,25 @@ struct WeekViewAsset: View {
         }
         .padding()
         .onAppear {
-            // Установка selectedDate в текущую дату при первом появлении
             self.selectedDate = Date()
         }
         Divider()
             .background(Color.gray)
+    }
+    
+    // Функция для получения даты для каждого дня недели
+    func dateFor(index: Int) -> Date {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        return calendar.date(byAdding: .day, value: -index + 1, to: today)!
+    }
+    
+    // Функция для получения названия дня недели
+    func dayOfWeek(for date: Date) -> String {
+        let dateFormatter = DateFormatter()
+        dateFormatter.locale = Locale(identifier: "ru_RU")
+        dateFormatter.dateFormat = "EEEEE"
+        return dateFormatter.string(from: date)
     }
 }
 
