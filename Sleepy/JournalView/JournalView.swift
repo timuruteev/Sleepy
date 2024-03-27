@@ -5,6 +5,7 @@ struct JournalView: View {
     @State private var sleepQuality = 96
     @State private var timeInBed = "8ч 51мин"
     @State private var timeAsleep = "8ч 40мин"
+    @State private var selectedDate = Date()
     
     var dateFormatter: DateFormatter {
         let formatter = DateFormatter()
@@ -31,10 +32,10 @@ struct JournalView: View {
                 Spacer()
                 Spacer()
                 DateViewAsset()
-                WeekViewAsset()
+                WeekViewAsset(selectedDate: $selectedDate)
                 QualityViewAsset()
                 GraphicViewAsset()
-                ShortViewAsset()
+                ShortViewAsset(selectedDate: $selectedDate)
                 SongsViewAsset()
                 Spacer()
                 Spacer()
