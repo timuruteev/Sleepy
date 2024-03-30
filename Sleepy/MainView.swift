@@ -137,8 +137,22 @@ struct FirstAlarm: SwiftUI.View {
                     let startTime = timeFormatter.string(from: currentDate)
                     
                     // Путь к файлу базы данных в проекте
-                    let path = Bundle.main.path(forResource: "Sleepy", ofType: "db")!
-                    let db = try! Connection(path, readonly: false)
+                    let fileManager = FileManager.default
+                    let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
+                    let finalDatabaseURL = documentsDirectory.appendingPathComponent("Sleepy1.db")
+
+                    if !fileManager.fileExists(atPath: finalDatabaseURL.path) {
+                        let databaseBundleURL = Bundle.main.url(forResource: "Sleepy1", withExtension: "db")!
+                        do {
+                            try fileManager.copyItem(at: databaseBundleURL, to: finalDatabaseURL)
+                        } catch {
+                            print("Ошибка копирования файла базы данных: \(error)")
+                        }
+                    }
+
+                    // Теперь используйте finalDatabaseURL.path для подключения к базе данных
+                    let db = try! Connection(finalDatabaseURL.path, readonly: false)
+
                     
                     // Определение таблицы
                     let statistic = Table("Statistic")

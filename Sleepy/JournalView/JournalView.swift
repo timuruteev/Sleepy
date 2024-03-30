@@ -31,7 +31,7 @@ struct JournalView: View {
             VStack() {
                 Spacer()
                 Spacer()
-                DateViewAsset()
+                DateViewAsset(selectedDate: $selectedDate)
                 WeekViewAsset(selectedDate: $selectedDate)
                 QualityViewAsset()
                 GraphicViewAsset()

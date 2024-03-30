@@ -1,14 +1,7 @@
-//
-//  DateViewAsset.swift
-//  Sleepy
-//
-//  Created by Timur on 06.02.2024.
-//
-
 import SwiftUI
 
 struct DateViewAsset: View {
-    @State private var currentDate = Date()
+    @Binding var selectedDate: Date // Step 1: Add @Binding for selectedDate
 
     var dateFormatter: DateFormatter {
         let formatter = DateFormatter()
@@ -26,11 +19,11 @@ struct DateViewAsset: View {
     
     var body: some View {
         HStack(alignment: .center) {
-            Text(dayOfWeekFormatter.string(from: currentDate).capitalized)
+            Text(dayOfWeekFormatter.string(from: selectedDate).capitalized) // Step 2: Use selectedDate
                 .font(.largeTitle)
                 .fontWeight(.bold)
                 .foregroundColor(.white)
-            Text(dateFormatter.string(from: currentDate))
+            Text(dateFormatter.string(from: selectedDate)) // Step 2: Use selectedDate
                 .font(.subheadline)
                 .foregroundColor(.gray)
                 .padding(.leading, 20)
@@ -40,11 +33,14 @@ struct DateViewAsset: View {
         .padding()
 
         Divider()
-            .background(Color.gray)    }
+            .background(Color.gray)
+    }
 }
 
-#Preview {
-    DateViewAsset()
-    .background(Color.black)
-
+// Step 3: Add a Preview
+struct DateViewAsset_Previews: PreviewProvider {
+    static var previews: some View {
+        DateViewAsset(selectedDate: .constant(Date())) // Use a sample date for preview
+            .background(Color.black)
+    }
 }

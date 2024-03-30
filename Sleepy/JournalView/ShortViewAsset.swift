@@ -9,41 +9,48 @@ struct ShortViewAsset: SwiftUI.View {
 
         // Функция для получения времени начала и окончания сна
     func fetchSleepData() {
-        let path = Bundle.main.path(forResource: "Sleepy", ofType: "db")!
-        let db = try! Connection(path, readonly: true)
-        
-        let statistic = Table("Statistic")
-        let dateAlarmExpr = Expression<String>("DateAlarm")
-        let startTimeExpr = Expression<String>("StartTime")
-        let endTimeExpr = Expression<String>("EndTime")
-        
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd"
-        let selectedDateString = dateFormatter.string(from: selectedDate)
-        
-        let timeFormatter = DateFormatter()
-        timeFormatter.dateFormat = "HH:mm:ss" // Формат времени в базе данных
-        
-        let displayTimeFormatter = DateFormatter()
-        displayTimeFormatter.dateFormat = "HH:mm" // Формат времени для отображения
-        
+            // Путь к файлу базы данных в директории Documents
+            let fileManager = FileManager.default
+            let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
+            let finalDatabaseURL = documentsDirectory.appendingPathComponent("Sleepy1.db")
+
+            let db = try! Connection(finalDatabaseURL.path, readonly: true)
+
+            let statistic = Table("Statistic")
+            let idAlarm = Expression<Int64>("IdAlarm")
+            let dateAlarmExpr = Expression<String>("DateAlarm")
+            let startTimeExpr = Expression<String>("StartTime")
+            let endTimeExpr = Expression<String>("EndTime")
+
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateFormat = "yyyy-MM-dd"
+            let selectedDateString = dateFormatter.string(from: selectedDate)
+
+            let timeFormatter = DateFormatter()
+            timeFormatter.dateFormat = "HH:mm:ss" // Формат времени в базе данных
+
+            let displayTimeFormatter = DateFormatter()
+            displayTimeFormatter.dateFormat = "HH:mm" // Формат времени для отображения
+
         let query = statistic.select(startTimeExpr, endTimeExpr)
-                             .where(dateAlarmExpr == selectedDateString)
+                                 .where(dateAlarmExpr == selectedDateString)
+                                 .order(idAlarm.desc) // Сортировка по убыванию IdAlarm
+                                 .limit(1) // Ограничение на одну запись
         do {
-            if let row = try db.pluck(query) {
-                if let startTimeDate = timeFormatter.date(from: row[startTimeExpr]),
-                   let endTimeDate = timeFormatter.date(from: row[endTimeExpr]) {
-                    self.startTime = displayTimeFormatter.string(from: startTimeDate)
-                    self.endTime = displayTimeFormatter.string(from: endTimeDate)
+                if let row = try db.pluck(query) {
+                    if let startTimeDate = timeFormatter.date(from: row[startTimeExpr]),
+                       let endTimeDate = timeFormatter.date(from: row[endTimeExpr]) {
+                        self.startTime = displayTimeFormatter.string(from: startTimeDate)
+                        self.endTime = displayTimeFormatter.string(from: endTimeDate)
+                    }
+                } else {
+                    self.startTime = "Нет данных"
+                    self.endTime = "Нет данных"
                 }
-            } else {
-                self.startTime = "Нет данных"
-                self.endTime = "Нет данных"
+            } catch {
+                print("Ошибка при выборке данных: \(error)")
             }
-        } catch {
-            print("Ошибка при выборке данных: \(error)")
         }
-    }
 
     var body: some SwiftUI.View {
         VStack {
