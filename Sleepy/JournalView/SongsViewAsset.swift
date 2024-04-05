@@ -1,7 +1,8 @@
 import SwiftUI
 import AVFoundation
+import SQLite
 
-struct SongsViewAsset: View {
+struct SongsViewAsset: SwiftUI.View {
     @State private var audioPlayer: AVAudioPlayer?
     @State private var isPlaying = false
     @State private var audioFileURL: URL?
@@ -9,7 +10,7 @@ struct SongsViewAsset: View {
     @State private var audioDuration: String = ""
     @State private var audioTitle: String = "" // Добавьте эту переменную
     
-    var body: some View {
+    var body: some SwiftUI.View {
         VStack {
             HStack {
                 Button(action: {
@@ -33,48 +34,55 @@ struct SongsViewAsset: View {
             }
         }
         .onAppear() {
-            loadAudioFile()
+            loadAudioFileFromDatabase()
         }
         
     }
     
+    
     // Добавьте этот метод для загрузки аудиофайла из папки документов
-    func loadAudioFile() {
-        let documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-        do {
-            // Получите список файлов в папке документов
-            let fileURLs = try FileManager.default.contentsOfDirectory(at: documentsURL, includingPropertiesForKeys: nil)
-            // Найдите последний файл с расширением m4a
-            if let audioFileURL = fileURLs.filter({ $0.pathExtension == "m4a" }).last {
-                // Создайте экземпляр AVAudioPlayer и загрузите файл
-                audioPlayer = try AVAudioPlayer(contentsOf: audioFileURL)
-                // Сохраните URL, имя и продолжительность файла
-                self.audioFileURL = audioFileURL
-                audioFileName = audioFileURL.lastPathComponent
-                
-                audioDuration = formatTime(audioPlayer?.duration ?? 0)
-                // Получите дату создания файла из его свойств
-                if let creationDate = getFileCreationDate(audioFileURL) {
-                    // Преобразуйте дату в строку с нужным форматом
-                    let dateString = formatDate(creationDate)
-                    // Сохраните дату как заголовок аудиофайла
-                    audioTitle = dateString
-                } else {
-                    // Если дата не найдена, выведите сообщение об ошибке
-                    print("No creation date found")
-                    audioTitle = "Нет даты создания"
+    func loadAudioFileFromDatabase() {
+        // Путь к файлу базы данных
+        let fileManager = FileManager.default
+        let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let databaseURL = documentsDirectory.appendingPathComponent("Sleepy1.db")
+        
+        // Подключение к базе данных
+        let db = try! Connection(databaseURL.path, readonly: true)
+        
+        // Определение таблицы и выражений
+        let audioRecord = Table("AudioRecord")
+        let idAlarmExpr = Expression<Int64>("IdAlarm")
+        let soundPathExpr = Expression<String>("SoundPath")
+        
+        // Получение пути к последнему аудиофайлу
+        if let lastAudioRecord = try? db.pluck(audioRecord.order(idAlarmExpr.desc)) {
+            let relativePath = lastAudioRecord[soundPathExpr]
+            
+            // Проверка доступности файла
+            let documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+            let fullPath = documentsURL.appendingPathComponent(relativePath).path
+            
+            // Проверка доступности файла и воспроизведение
+            if FileManager.default.fileExists(atPath: fullPath) {
+                do {
+                    // Инициализация AVAudioPlayer и воспроизведение
+                    audioPlayer = try AVAudioPlayer(contentsOf: URL(fileURLWithPath: fullPath))
+                    audioDuration = formatTime(audioPlayer?.duration ?? 0)
+                    audioTitle = URL(fileURLWithPath: fullPath).lastPathComponent
+                    audioPlayer?.prepareToPlay()
+                } catch {
+                    print("Ошибка при попытке воспроизвести файл: \(error)")
                 }
             } else {
-                // Если файл не найден, выведите сообщение об ошибке
-                print("No audio file found")
-                audioTitle = "Нет аудиофайла" // Добавьте эту строку
+                print("Файл не найден по пути: \(fullPath)")
             }
-        } catch {
-            // Обработайте возможные ошибки
-            print("Failed to load audio file: \(error)")
+        } else {
+            print("Аудиозапись не найдена")
         }
     }
-    
+
+
     // Добавьте этот метод для запуска и приостановки воспроизведения
     func playOrPause() {
         guard let player = audioPlayer else { return }
@@ -117,7 +125,7 @@ struct SongsViewAsset: View {
 }
 
 struct SongsViewAsset_Previews: PreviewProvider {
-    static var previews: some View {
+    static var previews: some SwiftUI.View {
         SongsViewAsset()
             .background(Color.black)
     }

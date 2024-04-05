@@ -22,12 +22,12 @@
 		392933ED2B7B42DD006ED05A /* WakeUpPeriodViewAsset.swift in Sources */ = {isa = PBXBuildFile; fileRef = 392933EC2B7B42DD006ED05A /* WakeUpPeriodViewAsset.swift */; };
 		39443FE22B67D422002CB184 /* LoadingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39443FE12B67D422002CB184 /* LoadingView.swift */; };
 		39443FE62B67D4BF002CB184 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39443FE52B67D4BF002CB184 /* ContentView.swift */; };
-		394624BA2BB6DF1A00147613 /* Sleepy1.db in Resources */ = {isa = PBXBuildFile; fileRef = 394624B92BB6DF1A00147613 /* Sleepy1.db */; };
 		395A602D2B87504000214FC9 /* alarm.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 395A602C2B87504000214FC9 /* alarm.mp3 */; };
 		397718B32B7222230033ECCC /* WeekViewAsset.swift in Sources */ = {isa = PBXBuildFile; fileRef = 397718B22B7222230033ECCC /* WeekViewAsset.swift */; };
 		397718BA2B7224F30033ECCC /* QualityViewAsset.swift in Sources */ = {isa = PBXBuildFile; fileRef = 397718B92B7224F30033ECCC /* QualityViewAsset.swift */; };
 		397718BC2B7230490033ECCC /* GraphicViewAsset.swift in Sources */ = {isa = PBXBuildFile; fileRef = 397718BB2B7230490033ECCC /* GraphicViewAsset.swift */; };
 		397718C02B725CAC0033ECCC /* DateViewAsset.swift in Sources */ = {isa = PBXBuildFile; fileRef = 397718BF2B725CAC0033ECCC /* DateViewAsset.swift */; };
+		3997459C2BBC2B98007D27DF /* Sleepy1.db in Resources */ = {isa = PBXBuildFile; fileRef = 3997459B2BBC2B98007D27DF /* Sleepy1.db */; };
 		3999EDDA2B737C4F00F52602 /* ShortViewAsset.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3999EDD92B737C4F00F52602 /* ShortViewAsset.swift */; };
 		39AD37F72B6E401B0035A0CF /* MainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39AD37F62B6E401B0035A0CF /* MainView.swift */; };
 		39BBA5552BB02926009E4ED2 /* SQLite in Frameworks */ = {isa = PBXBuildFile; productRef = 39BBA5542BB02926009E4ED2 /* SQLite */; };
@@ -127,12 +127,12 @@
 		392933EC2B7B42DD006ED05A /* WakeUpPeriodViewAsset.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WakeUpPeriodViewAsset.swift; sourceTree = "<group>"; };
 		39443FE12B67D422002CB184 /* LoadingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadingView.swift; sourceTree = "<group>"; };
 		39443FE52B67D4BF002CB184 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
-		394624B92BB6DF1A00147613 /* Sleepy1.db */ = {isa = PBXFileReference; lastKnownFileType = file; path = Sleepy1.db; sourceTree = "<group>"; };
 		395A602C2B87504000214FC9 /* alarm.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; name = alarm.mp3; path = Sounds/alarm.mp3; sourceTree = "<group>"; };
 		397718B22B7222230033ECCC /* WeekViewAsset.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeekViewAsset.swift; sourceTree = "<group>"; };
 		397718B92B7224F30033ECCC /* QualityViewAsset.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QualityViewAsset.swift; sourceTree = "<group>"; };
 		397718BB2B7230490033ECCC /* GraphicViewAsset.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GraphicViewAsset.swift; sourceTree = "<group>"; };
 		397718BF2B725CAC0033ECCC /* DateViewAsset.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateViewAsset.swift; sourceTree = "<group>"; };
+		3997459B2BBC2B98007D27DF /* Sleepy1.db */ = {isa = PBXFileReference; lastKnownFileType = file; path = Sleepy1.db; sourceTree = "<group>"; };
 		3999EDD92B737C4F00F52602 /* ShortViewAsset.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortViewAsset.swift; sourceTree = "<group>"; };
 		39AD37F62B6E401B0035A0CF /* MainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainView.swift; sourceTree = "<group>"; };
 		39BBA5582BB0297B009E4ED2 /* Sleepy.db */ = {isa = PBXFileReference; lastKnownFileType = file; path = Sleepy.db; sourceTree = "<group>"; };
@@ -174,7 +174,7 @@
 		3905EE1E2B6683B500280C96 = {
 			isa = PBXGroup;
 			children = (
-				394624B92BB6DF1A00147613 /* Sleepy1.db */,
+				3997459B2BBC2B98007D27DF /* Sleepy1.db */,
 				39BBA5582BB0297B009E4ED2 /* Sleepy.db */,
 				395A602C2B87504000214FC9 /* alarm.mp3 */,
 				395A602B2B87502600214FC9 /* Sounds */,
@@ -475,7 +475,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				394624BA2BB6DF1A00147613 /* Sleepy1.db in Resources */,
+				3997459C2BBC2B98007D27DF /* Sleepy1.db in Resources */,
 				39BBA5592BB0297B009E4ED2 /* Sleepy.db in Resources */,
 				3905EE322B6683B600280C96 /* Preview Assets.xcassets in Resources */,
 				3905EE2F2B6683B600280C96 /* Assets.xcassets in Resources */,
