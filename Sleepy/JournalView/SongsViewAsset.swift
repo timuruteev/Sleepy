@@ -10,27 +10,34 @@ struct SongsViewAsset: SwiftUI.View {
     @State private var audioFileName: String = ""
     @State private var audioDuration: String = ""
     @State private var audioTitle: String = "" // Добавьте эту переменную
+    @State private var errorMessage: String?
     
     var body: some SwiftUI.View {
         VStack {
-            HStack {
-                Button(action: {
-                    playOrPause()
-                }) {
-                    Image(systemName: isPlaying ? "pause.circle" : "play.circle")
-                        .resizable()
-                        .frame(width: 32, height: 32) // Уменьшите размер кнопки
-                }
-                .padding()
-                .alignmentGuide(.leading) { _ in 0 }
-                
-                Spacer() // Добавьте пробел между кнопкой и текстом
-                
-                VStack(alignment: .trailing) { // Выровняйте текст по правому краю
-                    Text("Записано: \(audioTitle)") // Добавьте этот текст
-                        .font(.subheadline)
-                    Text("Длительность: \(audioDuration)") // Добавьте этот текст
-                        .font(.subheadline)
+            if let errorMessage = errorMessage {
+                // Если есть ошибка, отображаем ее вместо кнопки и информации о записи
+                Text(errorMessage)
+                    .foregroundColor(.red)
+            } else {
+                HStack {
+                    Button(action: {
+                        playOrPause()
+                    }) {
+                        Image(systemName: isPlaying ? "pause.circle" : "play.circle")
+                            .resizable()
+                            .frame(width: 32, height: 32) // Уменьшите размер кнопки
+                    }
+                    .padding()
+                    .alignmentGuide(.leading) { _ in 0 }
+                    
+                    Spacer() // Добавьте пробел между кнопкой и текстом
+                    
+                    VStack(alignment: .trailing) { // Выровняйте текст по правому краю
+                        Text("Записано: \(audioTitle)") // Добавьте этот текст
+                            .font(.subheadline)
+                        Text("Длительность: \(audioDuration)") // Добавьте этот текст
+                            .font(.subheadline)
+                    }
                 }
             }
         }
@@ -62,37 +69,43 @@ struct SongsViewAsset: SwiftUI.View {
         
         // Получение пути к последнему аудиофайлу
         let formatter = DateFormatter()
-            formatter.dateFormat = "yyyy-MM-dd"
-            let selectedDateString = formatter.string(from: selectedDate)
-                
+        formatter.dateFormat = "yyyy-MM-dd"
+        let selectedDateString = formatter.string(from: selectedDate)
         
         let query = audioRecord.join(statistic, on: audioRecord[idAlarmExpr] == statistic[idAlarmExpr])
-                                    .filter(statistic[dateAlarmExpr] == selectedDateString)
-                                    .order(statistic[idAlarmExpr].desc)
+                               .filter(statistic[dateAlarmExpr] == selectedDateString)
+                               .order(statistic[idAlarmExpr].desc)
+        
+        // Получение пути к последнему аудиофайлу за выбранный день
+        if let lastAudioRecord = try? db.pluck(query) {
+            let relativePath = lastAudioRecord[soundPathExpr]
+            let fullPath = documentsDirectory.appendingPathComponent(relativePath).path
             
-            // Получение пути к последнему аудиофайлу за выбранный день
-            if let lastAudioRecord = try? db.pluck(query) {
-                let relativePath = lastAudioRecord[soundPathExpr]
-                let fullPath = documentsDirectory.appendingPathComponent(relativePath).path
-                
-                // Проверка доступности файла и воспроизведение
-                if FileManager.default.fileExists(atPath: fullPath) {
-                    do {
-                        // Инициализация AVAudioPlayer и воспроизведение
-                        audioPlayer = try AVAudioPlayer(contentsOf: URL(fileURLWithPath: fullPath))
-                        audioDuration = formatTime(audioPlayer?.duration ?? 0)
-                        audioTitle = URL(fileURLWithPath: fullPath).lastPathComponent
-                        audioPlayer?.prepareToPlay()
-                    } catch {
-                        print("Ошибка при попытке воспроизвести файл: \(error)")
-                    }
-                } else {
-                    print("Файл не найден по пути: \(fullPath)")
+            // Проверка доступности файла и воспроизведение
+            if FileManager.default.fileExists(atPath: fullPath) {
+                do {
+                    // Инициализация AVAudioPlayer и воспроизведение
+                    audioPlayer = try AVAudioPlayer(contentsOf: URL(fileURLWithPath: fullPath))
+                    audioDuration = formatTime(audioPlayer?.duration ?? 0)
+                    
+                    if let creationDate = getFileCreationDate(URL(fileURLWithPath: fullPath)) {
+                                        audioTitle = (formatDate(creationDate))
+                                    } else {
+                                        audioTitle = "Дата создания файла неизвестна"
+                                    }
+                    
+                    audioPlayer?.prepareToPlay()
+                    self.errorMessage = nil // Очистка сообщения об ошибке, если файл найден
+                } catch {
+                    self.errorMessage = "Ошибка при попытке воспроизвести записанный звук"
                 }
             } else {
-                print("Аудиозапись не найдена для даты: \(selectedDateString)")
+                self.errorMessage = "Записанный звук не найден"
             }
+        } else {
+            self.errorMessage = "Аудиозапись не найдена для выбранной даты"
         }
+    }
 
 
     // Добавьте этот метод для запуска и приостановки воспроизведения

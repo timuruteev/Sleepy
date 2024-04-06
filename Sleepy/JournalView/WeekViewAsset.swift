@@ -12,7 +12,7 @@ struct WeekViewAsset: View {
                     ZStack {
                         Circle()
                             .stroke(lineWidth: 7)
-                            .foregroundColor(index == 1 ? Color.blue : Color.blue)
+                            .foregroundColor(self.isDateSelected(index: index) ? Color.red : Color.blue)
                         Text(self.dayOfWeek(for: self.dateFor(index: index)))
                             .font(.subheadline)
                             .foregroundColor(.white)
@@ -34,6 +34,11 @@ struct WeekViewAsset: View {
             let calendar = Calendar.current
             let today = calendar.startOfDay(for: Date())
             return calendar.date(byAdding: .day, value: -index + 1, to: today)!
+        }
+    
+    func isDateSelected(index: Int) -> Bool {
+            let calendar = Calendar.current
+            return calendar.isDate(self.selectedDate, inSameDayAs: self.dateFor(index: index))
         }
     
     func dayOfWeek(for date: Date) -> String {
