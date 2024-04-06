@@ -3,6 +3,7 @@ import AVFoundation
 import SQLite
 
 struct SongsViewAsset: SwiftUI.View {
+    @SwiftUI.Binding var selectedDate: Date
     @State private var audioPlayer: AVAudioPlayer?
     @State private var isPlaying = false
     @State private var audioFileURL: URL?
@@ -36,8 +37,10 @@ struct SongsViewAsset: SwiftUI.View {
         .onAppear() {
             loadAudioFileFromDatabase()
         }
-        
-    }
+        .onChange(of: selectedDate) { newDate in
+                    loadAudioFileFromDatabase()
+                }
+            }
     
     
     // Добавьте этот метод для загрузки аудиофайла из папки документов
@@ -52,35 +55,44 @@ struct SongsViewAsset: SwiftUI.View {
         
         // Определение таблицы и выражений
         let audioRecord = Table("AudioRecord")
+        let statistic = Table("Statistic")
         let idAlarmExpr = Expression<Int64>("IdAlarm")
         let soundPathExpr = Expression<String>("SoundPath")
+        let dateAlarmExpr = Expression<String>("DateAlarm")
         
         // Получение пути к последнему аудиофайлу
-        if let lastAudioRecord = try? db.pluck(audioRecord.order(idAlarmExpr.desc)) {
-            let relativePath = lastAudioRecord[soundPathExpr]
+        let formatter = DateFormatter()
+            formatter.dateFormat = "yyyy-MM-dd"
+            let selectedDateString = formatter.string(from: selectedDate)
+                
+        
+        let query = audioRecord.join(statistic, on: audioRecord[idAlarmExpr] == statistic[idAlarmExpr])
+                                    .filter(statistic[dateAlarmExpr] == selectedDateString)
+                                    .order(statistic[idAlarmExpr].desc)
             
-            // Проверка доступности файла
-            let documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-            let fullPath = documentsURL.appendingPathComponent(relativePath).path
-            
-            // Проверка доступности файла и воспроизведение
-            if FileManager.default.fileExists(atPath: fullPath) {
-                do {
-                    // Инициализация AVAudioPlayer и воспроизведение
-                    audioPlayer = try AVAudioPlayer(contentsOf: URL(fileURLWithPath: fullPath))
-                    audioDuration = formatTime(audioPlayer?.duration ?? 0)
-                    audioTitle = URL(fileURLWithPath: fullPath).lastPathComponent
-                    audioPlayer?.prepareToPlay()
-                } catch {
-                    print("Ошибка при попытке воспроизвести файл: \(error)")
+            // Получение пути к последнему аудиофайлу за выбранный день
+            if let lastAudioRecord = try? db.pluck(query) {
+                let relativePath = lastAudioRecord[soundPathExpr]
+                let fullPath = documentsDirectory.appendingPathComponent(relativePath).path
+                
+                // Проверка доступности файла и воспроизведение
+                if FileManager.default.fileExists(atPath: fullPath) {
+                    do {
+                        // Инициализация AVAudioPlayer и воспроизведение
+                        audioPlayer = try AVAudioPlayer(contentsOf: URL(fileURLWithPath: fullPath))
+                        audioDuration = formatTime(audioPlayer?.duration ?? 0)
+                        audioTitle = URL(fileURLWithPath: fullPath).lastPathComponent
+                        audioPlayer?.prepareToPlay()
+                    } catch {
+                        print("Ошибка при попытке воспроизвести файл: \(error)")
+                    }
+                } else {
+                    print("Файл не найден по пути: \(fullPath)")
                 }
             } else {
-                print("Файл не найден по пути: \(fullPath)")
+                print("Аудиозапись не найдена для даты: \(selectedDateString)")
             }
-        } else {
-            print("Аудиозапись не найдена")
         }
-    }
 
 
     // Добавьте этот метод для запуска и приостановки воспроизведения
@@ -115,7 +127,6 @@ struct SongsViewAsset: SwiftUI.View {
     }
     
     // Добавьте этот метод для преобразования даты в строку
-    // Измените этот метод для преобразования даты в строку
     func formatDate(_ date: Date) -> String {
         let formatter = DateFormatter()
         formatter.dateFormat = "d MMMM в HH:mm" // Измените этот формат
@@ -126,7 +137,7 @@ struct SongsViewAsset: SwiftUI.View {
 
 struct SongsViewAsset_Previews: PreviewProvider {
     static var previews: some SwiftUI.View {
-        SongsViewAsset()
+        SongsViewAsset(selectedDate: .constant(Date()))
             .background(Color.black)
     }
 }

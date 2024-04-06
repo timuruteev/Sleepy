@@ -26,6 +26,7 @@ struct JournalView: View {
     @State private var selectedTab = 0
     @State private var selectedButton = "Статистика"
     
+    
     var body: some View {
         ScrollView{
             VStack() {
@@ -36,7 +37,7 @@ struct JournalView: View {
                 QualityViewAsset(selectedDate: $selectedDate)
                 GraphicViewAsset()
                 ShortViewAsset(selectedDate: $selectedDate)
-                SongsViewAsset()
+                SongsViewAsset(selectedDate: $selectedDate)
                 Spacer()
                 Spacer()
             }

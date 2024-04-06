@@ -31,19 +31,18 @@ struct WeekViewAsset: View {
     
     // Функция для получения даты для каждого дня недели
     func dateFor(index: Int) -> Date {
-        let calendar = Calendar.current
-        let today = calendar.startOfDay(for: Date())
-        return calendar.date(byAdding: .day, value: -index + 1, to: today)!
-    }
+            let calendar = Calendar.current
+            let today = calendar.startOfDay(for: Date())
+            return calendar.date(byAdding: .day, value: -index + 1, to: today)!
+        }
     
-    // Функция для получения названия дня недели
     func dayOfWeek(for date: Date) -> String {
-        let dateFormatter = DateFormatter()
-        dateFormatter.locale = Locale(identifier: "ru_RU")
-        dateFormatter.dateFormat = "EEEEE"
-        return dateFormatter.string(from: date)
+            let dateFormatter = DateFormatter()
+            dateFormatter.locale = Locale(identifier: "ru_RU")
+            dateFormatter.dateFormat = "EEEEE"
+            return dateFormatter.string(from: date)
+        }
     }
-}
 
 // Превью компонента
 struct WeekViewAsset_Previews: PreviewProvider {
