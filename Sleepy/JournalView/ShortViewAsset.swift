@@ -53,99 +53,53 @@ struct ShortViewAsset: SwiftUI.View {
         }
 
     var body: some SwiftUI.View {
-        VStack {
-            HStack{
-                Image(systemName:"moon.fill")
-                    .resizable()
-                    .frame(width : 30, height : 30)
-                    .foregroundColor(.blue)
-                    .padding(10)
-                VStack(alignment: .leading) {
-                    Text(startTime) // Используем переменную для отображения времени начала сна
-                                            .font(.title)
-                                            .fontWeight(.bold)
-                                            .foregroundColor(.white)
-                                        
-                                        Text("Начало сна")
-                                            .font(.subheadline)
-                                            .foregroundColor(.white)
-                                    }
-                Spacer()
-                Spacer()
-                Spacer()
-                Spacer()
-                Spacer()
-                Spacer()
-                Spacer()
-                Spacer()
-                Spacer()
-
-                Image(systemName:"bed.double.circle.fill")
-                    .resizable()
-                    .frame(width : 30, height : 30)
-                    .foregroundColor(.blue)
-                    .padding(10)
-                VStack (alignment: .leading){
-                    
-                    Text("10 мин")
-                        .font(.title)
-                        .fontWeight(.bold)
-                        .foregroundColor(.white)
-                    
-                    Text("заснул(а) после")
-                        .font(.subheadline)
-                        .foregroundColor(.white)
-                    
+            VStack {
+                HStack{
+                    Image(systemName:"moon.fill")
+                        .resizable()
+                        .frame(width : 30, height : 30)
+                        .foregroundColor(.blue)
+                        .padding(10)
+                    VStack(alignment: .leading) {
+                        Text(startTime)
+                            .font(.title)
+                            .fontWeight(.bold)
+                            .foregroundColor(.white)
+                        Text("Начало сна")
+                            .font(.subheadline)
+                            .foregroundColor(.white)
+                    }
+                    Spacer()
+                    Spacer()
+                    Spacer()
+                    Spacer()
+                    Spacer()
+                    Image(systemName:"alarm.fill")
+                        .resizable()
+                        .frame(width : 30, height : 30)
+                        .foregroundColor(.blue)
+                        .padding(10)
+                    VStack(alignment: .leading) {
+                        Text(endTime)
+                            .font(.title)
+                            .fontWeight(.bold)
+                            .foregroundColor(.white)
+                        Text("Конец сна")
+                            .font(.subheadline)
+                            .foregroundColor(.white)
+                    }
+                    Spacer()
                 }
-                Spacer()
-                
+                .padding()
+                Divider()
+                    .background(Color.gray)
             }
-            .padding()
-            HStack {
-                Spacer()
-                Image(systemName:"alarm.fill")
-                    .resizable()
-                    .frame(width : 30, height : 30)
-                    .foregroundColor(.blue)
-                    .padding(10)
-                VStack(alignment: .leading) {
-                    Text(endTime) // Используем переменную для отображения времени окончания сна
-                                            .font(.title)
-                                            .fontWeight(.bold)
-                                            .foregroundColor(.white)
-                                        
-                                        Text("Конец сна")
-                                            .font(.subheadline)
-                                            .foregroundColor(.white)
-                                    }
-                Spacer()
-                Spacer()
-                Spacer()
-                Spacer()
-                Spacer()
-                Spacer()
-                Spacer()
-                Spacer()
-                Spacer()
-                Spacer()
-                Spacer()
-                Spacer()
-                Spacer()
-                Spacer()
-                Spacer()
-                Spacer()
+            .onAppear(perform: fetchSleepData)
+            .onChange(of: selectedDate) { _ in
+                fetchSleepData()
             }
-            .padding(.bottom, 20) // Добавление отступа сверху
-            Divider()
-                .background(Color.gray)
-            
-        }
-        .onAppear(perform: fetchSleepData) // Вызов функции при появлении view
-        .onChange(of: selectedDate) { _ in
-            fetchSleepData()
         }
     }
-}
 
 struct ShortViewAsset_Previews : PreviewProvider{
     

@@ -41,66 +41,51 @@ struct QualityViewAsset: SwiftUI.View {
                                      .where(dateAlarmExpr == selectedDateString)
                                      .order(idAlarm.desc)
                                      .limit(1)
-                do {
-                    if let row = try db.pluck(query) {
-                        if let startTimeDate = timeFormatter.date(from: row[startTimeExpr]),
-                           let endTimeDate = timeFormatter.date(from: row[endTimeExpr]) {
-                            self.startTime = displayTimeFormatter.string(from: startTimeDate)
-                            self.endTime = displayTimeFormatter.string(from: endTimeDate)
+        do {
+                if let row = try db.pluck(query) {
+                    if var startTimeDate = timeFormatter.date(from: row[startTimeExpr]),
+                       var endTimeDate = timeFormatter.date(from: row[endTimeExpr]) {
+                        
+                        // Проверка, произошел ли переход через полночь
+                        if endTimeDate < startTimeDate {
+                            // Добавляем 24 часа к времени окончания, если оно раньше времени начала
+                            endTimeDate = Calendar.current.date(byAdding: .day, value: 1, to: endTimeDate)!
+                        }
 
-                            // Вычисление времени в постели (без вычитания 15 минут)
-                            let components = calendar.dateComponents([.hour, .minute], from: startTimeDate, to: endTimeDate)
-                            if let hours = components.hour, let minutes = components.minute {
-                                self.timeInBed = "\(hours)ч \(minutes)мин"
-                            }
+                        self.startTime = displayTimeFormatter.string(from: startTimeDate)
+                        self.endTime = displayTimeFormatter.string(from: endTimeDate)
+
+                        // Вычисление времени в постели
+                        let components = calendar.dateComponents([.hour, .minute], from: startTimeDate, to: endTimeDate)
+                        if let hours = components.hour, let minutes = components.minute {
+                            self.timeInBed = "\(hours)ч \(minutes)мин"
+                        }
 
                             // Вычисление времени во сне (с вычитанием 15 минут, если разница > 30 минут)
-                            let timeDifference = endTimeDate.timeIntervalSince(startTimeDate)
-                            if timeDifference >= 30 * 60 {
-                                let adjustedEndTimeForSleep = endTimeDate.addingTimeInterval(-fifteenMinutes)
-                                let sleepComponents = calendar.dateComponents([.hour, .minute], from: startTimeDate, to: adjustedEndTimeForSleep)
-                                if let sleepHours = sleepComponents.hour, let sleepMinutes = sleepComponents.minute {
-                                    self.timeAsleep = "\(sleepHours)ч \(sleepMinutes)мин"
+                        let timeDifference = endTimeDate.timeIntervalSince(startTimeDate)
+                                        if timeDifference >= 30 * 60 {
+                                            let adjustedEndTimeForSleep = endTimeDate.addingTimeInterval(-fifteenMinutes)
+                                            let sleepComponents = calendar.dateComponents([.hour, .minute], from: startTimeDate, to: adjustedEndTimeForSleep)
+                                            if let sleepHours = sleepComponents.hour, let sleepMinutes = sleepComponents.minute {
+                                                self.timeAsleep = "\(sleepHours)ч \(sleepMinutes)мин"
+                                            }
+                                        } else {
+                                            self.timeAsleep = "0ч 0мин"
+                                        }
+                                    }
+                                } else {
+                                    self.startTime = "Нет данных"
+                                    self.endTime = "Нет данных"
                                 }
-                            } else {
-                                self.timeAsleep = "0ч 0мин"
+                            } catch {
+                                print("Ошибка при выборке данных: \(error)")
                             }
                         }
-                    } else {
-                        self.startTime = "Нет данных"
-                        self.endTime = "Нет данных"
-                    }
-                } catch {
-                    print("Ошибка при выборке данных: \(error)")
-                }
-            }
 
     
     var body: some SwiftUI.View {
         HStack {
-            ZStack {
-                Circle()
-                    .stroke(lineWidth: 13)
-                    .opacity(0.3)
-                    .foregroundColor(Color.blue)
-                Circle()
-                    .trim(from: 0.0, to: CGFloat(min(Double(self.sleepQuality) / 100, 1)))
-                    .stroke(style: StrokeStyle(lineWidth: 13, lineCap: .round, lineJoin: .round))
-                    .foregroundColor(Color.blue)
-                    .rotationEffect(.degrees(-90))
-                VStack {
-                    Text("\(self.sleepQuality)%")
-                        .font(.title)
-                        .bold()
-                        .foregroundColor(.white)
-                    Text("Качество")
-                        .font(.subheadline)
-                        .foregroundColor(.gray)
-                }
-            }
-            .frame(width: 120, height: 120)
-            Spacer().frame(width: 50)
-            VStack(alignment: .leading, spacing: 10) {
+            HStack() {
                 VStack(alignment: .leading) {
                     Text(timeInBed)
                         .font(.title)
@@ -110,14 +95,17 @@ struct QualityViewAsset: SwiftUI.View {
                         .font(.headline)
                         .foregroundColor(.gray)
                 }
-                VStack(alignment: .leading) {
-                    Text(timeAsleep)
-                        .font(.title)
-                        .bold()
-                        .foregroundColor(.white)
-                    Text("Во сне")
-                        .font(.headline)
-                        .foregroundColor(.gray)
+                Spacer()
+                HStack() {
+                    VStack(alignment: .leading) {
+                        Text(timeAsleep)
+                            .font(.title)
+                            .bold()
+                            .foregroundColor(.white)
+                        Text("Во сне")
+                            .font(.headline)
+                            .foregroundColor(.gray)
+                    }
                 }
             }
         }

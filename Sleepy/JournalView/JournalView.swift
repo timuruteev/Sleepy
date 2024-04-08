@@ -47,11 +47,14 @@ struct JournalView: View {
 
     }
 }
-  
-struct JournalView_Previews: PreviewProvider {
-    static var previews: some View {
+
+struct JournalView_Previews : PreviewProvider{
+    
+    static var previews:some View{
+        
         JournalView()
+            .background(Color.black)
+        
     }
 }
-
 

@@ -1,7 +1,60 @@
 import SwiftUI
+import SQLite
 
-struct InformationViewAsset: View {
-    var body: some View {
+struct InformationViewAsset: SwiftUI.View {
+    
+    @State private var numberOfNights: Int = 0
+        @State private var averageSleepTime: String = "0ч 0мин"
+
+        // Функция для подсчета количества ночей и среднего времени сна
+        func fetchSleepStatistics() {
+            let fileManager = FileManager.default
+            let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
+            let finalDatabaseURL = documentsDirectory.appendingPathComponent("Sleepy1.db")
+
+            let db = try! Connection(finalDatabaseURL.path, readonly: true)
+
+            let statistic = Table("Statistic")
+            let idAlarm = Expression<Int64>("IdAlarm")
+            let startTimeExpr = Expression<String>("StartTime")
+            let endTimeExpr = Expression<String>("EndTime")
+
+            let timeFormatter = DateFormatter()
+            timeFormatter.dateFormat = "HH:mm:ss" // Формат времени в базе данных
+
+            let query = statistic.select(startTimeExpr, endTimeExpr)
+            var totalSleepTime: Int = 0
+            var validNights: Int = 0
+
+            do {
+                    for row in try db.prepare(query) {
+                        if var startTimeDate = timeFormatter.date(from: row[startTimeExpr]),
+                           var endTimeDate = timeFormatter.date(from: row[endTimeExpr]) {
+                            
+                            // Проверка, произошел ли переход через полночь
+                            if endTimeDate < startTimeDate {
+                                // Добавляем 24 часа к времени окончания, если оно раньше времени начала
+                                endTimeDate = Calendar.current.date(byAdding: .day, value: 1, to: endTimeDate)!
+                            }
+
+                            let sleepDuration = Calendar.current.dateComponents([.minute], from: startTimeDate, to: endTimeDate).minute ?? 0
+                            if sleepDuration > 30 {
+                                validNights += 1
+                                totalSleepTime += sleepDuration
+                            }
+                        }
+                    }
+                    self.numberOfNights = validNights
+                    if validNights > 0 {
+                        let averageMinutes = totalSleepTime / validNights
+                        self.averageSleepTime = "\(averageMinutes / 60)ч \(averageMinutes % 60)мин"
+                    }
+                } catch {
+                    print("Ошибка при выборке данных: \(error)")
+                }
+            }
+    
+    var body: some SwiftUI.View {
         VStack {
             // Заменил текст Профиль на динамический заголовок с датой и кнопкой календаря
             HStack(alignment: .center) {
@@ -12,68 +65,35 @@ struct InformationViewAsset: View {
                 Spacer()
                 // Обработка нажатия кнопки
             }
-            
             .padding()
             
             Divider()
                 .background(Color.gray)
             
-            HStack{
+            HStack {
                 Image(systemName:"moon.fill")
                     .resizable()
-                    .frame(width : 30, height : 30)
+                    .frame(width: 30, height: 30)
                     .foregroundColor(.blue)
                     .padding(10)
                 VStack(alignment: .leading) {
-                    Text("46")
-                        .font(.title)
+                    Text("\(self.numberOfNights)")                        .font(.title)
                         .fontWeight(.bold)
                         .foregroundColor(.white)
                     
                     Text("кол-во ночей")
                         .font(.subheadline)
                         .foregroundColor(.white)
-                    
-                    
-                    
                 }
                 Spacer()
-                Spacer()
-                Spacer()
-                Spacer()
-                Spacer()
                 
-                
-                Image(systemName:"circle.circle.fill")
-                    .resizable()
-                    .frame(width : 30, height : 30)
-                    .foregroundColor(.blue)
-                    .padding(10)
-                VStack (alignment: .leading){
-                    
-                    Text("88%")
-                        .font(.title)
-                        .fontWeight(.bold)
-                        .foregroundColor(.white)
-                    
-                    Text("средн. качество")
-                        .font(.subheadline)
-                        .foregroundColor(.white)
-                    
-                    
-                }
-                Spacer()
-            }
-            .padding()
-            HStack {
-                Spacer()
                 Image(systemName:"clock.fill")
                     .resizable()
-                    .frame(width : 30, height : 30)
+                    .frame(width: 30, height: 30)
                     .foregroundColor(.blue)
                     .padding(10)
                 VStack(alignment: .leading) {
-                    Text("7ч 10мин")
+                    Text("\(self.averageSleepTime)")
                         .font(.title)
                         .fontWeight(.bold)
                         .foregroundColor(.white)
@@ -83,36 +103,20 @@ struct InformationViewAsset: View {
                         .foregroundColor(.white)
                 }
                 Spacer()
-                Spacer()
-                Spacer()
-                Spacer()
-                Spacer()
-                Spacer()
-                Spacer()
-                Spacer()
-                Spacer()
-                Spacer()
-                Spacer()
-                Spacer()
-                Spacer()
-                Spacer()
-
             }
-            .padding(.bottom, 20)
-
+            .padding()
+            
             Divider()
                 .background(Color.gray)
-
             .padding(.bottom, 30)
         }
+        .onAppear(perform: fetchSleepStatistics)
     }
 }
-struct InformationViewAsset_Previews : PreviewProvider{
-    
-    static var previews:some View{
-        
+
+struct InformationViewAsset_Previews: PreviewProvider {
+    static var previews: some SwiftUI.View {
         InformationViewAsset()
-        .background(Color.black)
-        
+            .background(Color.black)
     }
 }

@@ -14,6 +14,14 @@ struct SongsViewAsset: SwiftUI.View {
     
     var body: some SwiftUI.View {
         VStack {
+            Text("Записанные звуки")
+                            .font(.title)
+                            .fontWeight(.bold)
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.leading, 10)
+                            .padding(.bottom)
+            
             if let errorMessage = errorMessage {
                 // Если есть ошибка, отображаем ее вместо кнопки и информации о записи
                 Text(errorMessage)

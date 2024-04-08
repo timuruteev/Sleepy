@@ -23,18 +23,18 @@ struct SettingsViewAsset: View {
             
             
             HStack {
-                Image(systemName:"alarm.fill")
+                Image(systemName:"clock.fill")
                     .resizable()
                     .frame(width : 30, height : 30)
                     .foregroundColor(.blue)
                     .padding(.horizontal, 10)
                 
                 VStack(alignment: .leading) {
-                    Text("Период пробуждения")
+                    Text("Период засыпания")
                         .font(.headline)
                         .foregroundColor(.white)
                     
-                    Text("30 минут")
+                    Text("15 минут")
                         .font(.subheadline)
                         .foregroundColor(Color.gray.opacity(0.7))
                 }
@@ -54,7 +54,7 @@ struct SettingsViewAsset: View {
             }
             // добавьте этот модификатор, чтобы добавить лист, который отображает окно WakeUpPeriodViewAsset
             .sheet(isPresented: $showWakeUpPeriod) {
-                WakeUpPeriodViewAsset()
+                TimeToSleep()
             }
             
             HStack {
