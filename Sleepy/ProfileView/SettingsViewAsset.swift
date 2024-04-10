@@ -1,61 +1,86 @@
 import SwiftUI
+import SQLite
 
-struct SettingsViewAsset: View {
-    // добавьте эту переменную, чтобы хранить состояние перехода
+struct SettingsViewAsset: SwiftUI.View {
     @State private var showWakeUpPeriod = false
-    // добавьте еще одну переменную, чтобы хранить состояние перехода для звука
     @State private var showSong = false
-    
     @State private var showRepeat = false
-
     @State private var showVibration = false
-
-    var body: some View {
-        VStack(alignment: .leading) {
-            Text("Настройки")
-                .font(.title)
-                .fontWeight(.bold)
-                .foregroundColor(.white)
-                .padding()
+    @State private var selectedSleepPeriod: Int = 15
+    
+    init() {
+        _selectedSleepPeriod = State(initialValue: SettingsViewAsset.fetchCurrentSleepPeriod())
+    }
+    
+    static func fetchCurrentSleepPeriod() -> Int {
+        
+            let fileManager = FileManager.default
+            let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
+            let finalDatabaseURL = documentsDirectory.appendingPathComponent("Sleepy1.db")
             
-            Divider()
-                .background(Color.gray)
+            let db = try! Connection(finalDatabaseURL.path)
             
+            let sleepPeriodTable = Table("SleepPeriod")
+            let duration = Expression<Int>("Duration")
             
-            HStack {
-                Image(systemName:"clock.fill")
-                    .resizable()
-                    .frame(width : 30, height : 30)
-                    .foregroundColor(.blue)
-                    .padding(.horizontal, 10)
+            if let currentPeriod = try! db.pluck(sleepPeriodTable.select(duration)) {
+                return currentPeriod[duration]
+            } else {
+                return 15 // Возвращаем значение по умолчанию, если в базе данных нет записей
+            }
+        }
+    
+    
+    var body: some SwiftUI.View {
+            VStack(alignment: .leading) {
+                Text("Настройки")
+                    .font(.title)
+                    .fontWeight(.bold)
+                    .foregroundColor(.white)
+                    .padding()
                 
-                VStack(alignment: .leading) {
-                    Text("Период засыпания")
-                        .font(.headline)
-                        .foregroundColor(.white)
+                Divider()
+                    .background(Color.gray)
+                
+                
+                HStack {
+                    Image(systemName:"clock.fill")
+                        .resizable()
+                        .frame(width : 30, height : 30)
+                        .foregroundColor(.blue)
+                        .padding(.horizontal, 10)
                     
-                    Text("15 минут")
-                        .font(.subheadline)
+                    VStack(alignment: .leading) {
+                                    Text("Период засыпания")
+                                        .font(.headline)
+                                        .foregroundColor(.white)
+                                    
+                                    // Используем selectedSleepPeriod для отображения текущего значения
+                                    Text("\(selectedSleepPeriod) минут")
+                                        .font(.subheadline)
+                                        .foregroundColor(Color.gray.opacity(0.7))
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading) // добавьте эту строку, чтобы выровнять текст по левому краю
+                    
+                    Spacer()
+                    
+                    Image(systemName:"chevron.right")
+                        .resizable()
+                        .frame(width : 12, height : 18)
                         .foregroundColor(Color.gray.opacity(0.7))
                 }
-                .frame(maxWidth: .infinity, alignment: .leading) // добавьте эту строку, чтобы выровнять текст по левому краю
-                
-                Spacer()
-                
-                Image(systemName:"chevron.right")
-                    .resizable()
-                    .frame(width : 12, height : 18)
-                    .foregroundColor(Color.gray.opacity(0.7))
-            }
-            .padding()
-            // добавьте этот модификатор, чтобы обернуть HStack в кнопку, которая активирует переход
-            .onTapGesture {
-                showWakeUpPeriod = true
-            }
-            // добавьте этот модификатор, чтобы добавить лист, который отображает окно WakeUpPeriodViewAsset
-            .sheet(isPresented: $showWakeUpPeriod) {
-                TimeToSleep()
-            }
+                .padding()
+                // добавьте этот модификатор, чтобы обернуть HStack в кнопку, которая активирует переход
+                .onAppear {
+                    self.selectedSleepPeriod = SettingsViewAsset.fetchCurrentSleepPeriod()
+                }
+                .onTapGesture {
+                    showWakeUpPeriod = true
+                }
+                // добавьте этот модификатор, чтобы добавить лист, который отображает окно WakeUpPeriodViewAsset
+                .sheet(isPresented: $showWakeUpPeriod) {
+                    TimeToSleep()
+                }
             
             HStack {
                 Image(systemName:"music.note")
@@ -165,7 +190,10 @@ struct SettingsViewAsset: View {
         }
     }
 }
-        #Preview {
-            SettingsViewAsset()
-                .background(Color.black)
-        }
+
+struct SettingsViewAsset_Previews: PreviewProvider {
+    static var previews: some SwiftUI.View {
+        SettingsViewAsset()
+            .background(Color.black)
+    }
+}

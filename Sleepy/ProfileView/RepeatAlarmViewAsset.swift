@@ -5,7 +5,7 @@ struct RepeatAlarmViewAsset: View {
     @State private var selectedPeriod = 30
     
     // Массив возможных периодов
-    let periods = [1, 2, 3, 4, 5, 10, 15, 20]
+    let periods = [1, 2, 5, 10, 15]
     
     // Свойство для хранения ссылки на окно ProfileView
     @Environment(\.presentationMode) var presentationMode
