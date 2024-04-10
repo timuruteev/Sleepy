@@ -19,10 +19,12 @@ struct QualityViewAsset: SwiftUI.View {
         let db = try! Connection(finalDatabaseURL.path, readonly: true)
 
         let statistic = Table("Statistic")
+        let sleepPeriodTable = Table("SleepPeriod")
         let idAlarm = Expression<Int64>("IdAlarm")
         let dateAlarmExpr = Expression<String>("DateAlarm")
         let startTimeExpr = Expression<String>("StartTime")
         let endTimeExpr = Expression<String>("EndTime")
+        let durationExpr = Expression<Int>("Duration")
 
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd"
@@ -34,14 +36,18 @@ struct QualityViewAsset: SwiftUI.View {
         let displayTimeFormatter = DateFormatter()
         displayTimeFormatter.dateFormat = "HH:mm" // Формат времени для отображения
 
-        let fifteenMinutes: TimeInterval = 15 * 60
         let calendar = Calendar.current
 
         let query = statistic.select(startTimeExpr, endTimeExpr)
-                                     .where(dateAlarmExpr == selectedDateString)
-                                     .order(idAlarm.desc)
-                                     .limit(1)
-        do {
+                             .where(dateAlarmExpr == selectedDateString)
+                             .order(idAlarm.desc)
+                             .limit(1)
+
+        // Получение значения Duration из таблицы SleepPeriod
+        if let sleepPeriodRow = try? db.pluck(sleepPeriodTable) {
+            let sleepDuration = sleepPeriodRow[durationExpr] * 60 // Преобразование в секунды
+
+            do {
                 if let row = try db.pluck(query) {
                     if var startTimeDate = timeFormatter.date(from: row[startTimeExpr]),
                        var endTimeDate = timeFormatter.date(from: row[endTimeExpr]) {
@@ -49,7 +55,7 @@ struct QualityViewAsset: SwiftUI.View {
                         // Проверка, произошел ли переход через полночь
                         if endTimeDate < startTimeDate {
                             // Добавляем 24 часа к времени окончания, если оно раньше времени начала
-                            endTimeDate = Calendar.current.date(byAdding: .day, value: 1, to: endTimeDate)!
+                            endTimeDate = calendar.date(byAdding: .day, value: 1, to: endTimeDate)!
                         }
 
                         self.startTime = displayTimeFormatter.string(from: startTimeDate)
@@ -61,26 +67,33 @@ struct QualityViewAsset: SwiftUI.View {
                             self.timeInBed = "\(hours)ч \(minutes)мин"
                         }
 
-                            // Вычисление времени во сне (с вычитанием 15 минут, если разница > 30 минут)
+                        // Вычисление времени во сне с учетом Duration из таблицы SleepPeriod
                         let timeDifference = endTimeDate.timeIntervalSince(startTimeDate)
-                                        if timeDifference >= 30 * 60 {
-                                            let adjustedEndTimeForSleep = endTimeDate.addingTimeInterval(-fifteenMinutes)
-                                            let sleepComponents = calendar.dateComponents([.hour, .minute], from: startTimeDate, to: adjustedEndTimeForSleep)
-                                            if let sleepHours = sleepComponents.hour, let sleepMinutes = sleepComponents.minute {
-                                                self.timeAsleep = "\(sleepHours)ч \(sleepMinutes)мин"
-                                            }
-                                        } else {
-                                            self.timeAsleep = "0ч 0мин"
-                                        }
-                                    }
-                                } else {
-                                    self.startTime = "Нет данных"
-                                    self.endTime = "Нет данных"
-                                }
-                            } catch {
-                                print("Ошибка при выборке данных: \(error)")
+                        if timeDifference >= Double(sleepDuration) {
+                            let adjustedEndTimeForSleep = endTimeDate.addingTimeInterval(-Double(sleepDuration))
+                            let sleepComponents = calendar.dateComponents([.hour, .minute], from: startTimeDate, to: adjustedEndTimeForSleep)
+                            if let sleepHours = sleepComponents.hour, let sleepMinutes = sleepComponents.minute {
+                                self.timeAsleep = "\(sleepHours)ч \(sleepMinutes)мин"
                             }
+                        } else {
+                            self.timeAsleep = "0ч 0мин"
                         }
+                    }
+                } else {
+                    self.startTime = "Нет данных"
+                    self.endTime = "Нет данных"
+                    self.timeInBed = "Нет данных"
+                    self.timeAsleep = "Нет данных"
+                }
+            } catch {
+                print("Ошибка при выборке данных: \(error)")
+            }
+        } else {
+            // Обработка случая, когда значение Duration отсутствует в таблице SleepPeriod
+            self.timeAsleep = "Нет данных"
+        }
+    }
+
 
     
     var body: some SwiftUI.View {
