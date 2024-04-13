@@ -265,7 +265,7 @@ struct TimerView: SwiftUI.View {
 }
 
 #Preview {
-    TimerView(wakeUpTime: .constant(Date()), audioPlayer: AudioPlayer(sound: "alarm")) // Добавьте аргумент audioPlayer
+    TimerView(wakeUpTime: .constant(Date()), audioPlayer: AudioPlayer()) // Добавьте аргумент audioPlayer
 }
 
 

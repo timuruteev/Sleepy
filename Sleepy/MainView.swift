@@ -30,26 +30,55 @@ class isPlayed{
     static var isPlaying = false
     static var index = 0
 }
+
 class AudioPlayer: NSObject, ObservableObject {
     // Свойство, которое хранит экземпляр AVAudioPlayer
     private var audioPlayer: AVAudioPlayer?
     
-    // Инициализатор, который принимает имя файла звука
-    init(sound: String) {
+    // Инициализатор, который теперь будет загружать звук из базы данных
+    override init() {
         super.init()
-        // Пытаемся загрузить файл звука из основного пакета
-        if let sound = Bundle.main.path(forResource: "alarm", ofType: "mp3") {
-            do {
-                self.audioPlayer = try AVAudioPlayer(contentsOf: URL(fileURLWithPath: sound))
-            } catch {
-                print("AVAudioPlayer could not be instantiated.")
+                // Получаем путь к директории Documents
+                let fileManager = FileManager.default
+                let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
+                let databaseURL = documentsDirectory.appendingPathComponent("Sleepy1.db")
+                
+                // Подключаемся к базе данных
+                let db = try! Connection(databaseURL.path, readonly: false)
+                
+                // Определяем таблицу и выражения
+                let alarmSound = Table("AlarmSound")
+                let soundNameExpr = Expression<String>("SoundName")
+                let soundPathExpr = Expression<String>("SoundPath")
+                
+                // Выбираем последний добавленный звук будильника
+                if let lastAlarmSound = try? db.pluck(alarmSound.order(Expression<Int64>("IdAlarmSound").desc)) {
+                    let soundPath = lastAlarmSound[soundPathExpr]
+                    
+                    // Удаляем начальный слеш из пути, если он есть
+                    let trimmedSoundPath = soundPath.hasPrefix("/") ? String(soundPath.dropFirst()) : soundPath
+                    
+                    // Формируем полный путь к файлу звука, учитывая папку Sounds
+                    let soundFilePath = documentsDirectory
+                        .appendingPathComponent("Sounds", isDirectory: true)
+                        .appendingPathComponent(trimmedSoundPath).path
+                    
+                    // Проверяем, существует ли файл по этому пути
+                    if fileManager.fileExists(atPath: soundFilePath) {
+                        // Пытаемся загрузить файл звука
+                        do {
+                            self.audioPlayer = try AVAudioPlayer(contentsOf: URL(fileURLWithPath: soundFilePath))
+                        } catch {
+                            print("AVAudioPlayer could not be instantiated: \(error)")
+                        }
+                    } else {
+                        print("Audio file does not exist at the path: \(soundFilePath)")
+                    }
+                } else {
+                    print("Audio file could not be found in the database.")
+                }
             }
-        } else {
-            print("Audio file could not be found.")
-        }
-    }
     
-
     // Метод, который воспроизводит или приостанавливает звук
     func playOrPause() {
         guard let player = audioPlayer else { return }
@@ -88,7 +117,7 @@ struct FirstAlarm: SwiftUI.View {
     @State private var isPresented = false
     
     // Создаем экземпляр AudioPlayer с именем файла звука
-    @StateObject private var audioPlayer = AudioPlayer(sound: "alarm")
+    @StateObject private var audioPlayer = AudioPlayer()
     
     // Создаем таймер, который будет запускаться каждую секунду
     let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
