@@ -7,9 +7,11 @@ struct SettingsViewAsset: SwiftUI.View {
     @State private var showRepeat = false
     @State private var showVibration = false
     @State private var selectedSleepPeriod: Int = 15
+    @State private var selectedAlarmSound: String = "Теплый ветер"
     
     init() {
         _selectedSleepPeriod = State(initialValue: SettingsViewAsset.fetchCurrentSleepPeriod())
+        _selectedAlarmSound = State(initialValue: SettingsViewAsset.fetchCurrentAlarmSound())
     }
     
     static func fetchCurrentSleepPeriod() -> Int {
@@ -30,6 +32,22 @@ struct SettingsViewAsset: SwiftUI.View {
             }
         }
     
+    static func fetchCurrentAlarmSound() -> String {
+            let fileManager = FileManager.default
+            let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
+            let finalDatabaseURL = documentsDirectory.appendingPathComponent("Sleepy1.db")
+            
+            let db = try! Connection(finalDatabaseURL.path)
+            
+            let alarmSoundTable = Table("AlarmSound")
+            let soundName = Expression<String>("SoundName")
+            
+            if let currentSound = try! db.pluck(alarmSoundTable.select(soundName)) {
+                return currentSound[soundName]
+            } else {
+                return "Теплый ветер" // Возвращаем значение по умолчанию, если в базе данных нет записей
+            }
+        }
     
     var body: some SwiftUI.View {
             VStack(alignment: .leading) {
@@ -73,6 +91,7 @@ struct SettingsViewAsset: SwiftUI.View {
                 // добавьте этот модификатор, чтобы обернуть HStack в кнопку, которая активирует переход
                 .onAppear {
                     self.selectedSleepPeriod = SettingsViewAsset.fetchCurrentSleepPeriod()
+                    
                 }
                 .onTapGesture {
                     showWakeUpPeriod = true
@@ -94,7 +113,7 @@ struct SettingsViewAsset: SwiftUI.View {
                         .font(.headline)
                         .foregroundColor(.white)
                     
-                    Text("Теплый ветер")
+                    Text(selectedAlarmSound)
                         .font(.subheadline)
                         .foregroundColor(Color.gray.opacity(0.7))
                 }
@@ -107,6 +126,10 @@ struct SettingsViewAsset: SwiftUI.View {
                     .foregroundColor(Color.gray.opacity(0.7))
             }
             .padding()
+            .onAppear {
+                self.selectedAlarmSound = SettingsViewAsset.fetchCurrentAlarmSound()
+                
+            }
             // добавьте этот модификатор, чтобы обернуть HStack в кнопку, которая активирует переход для звука
             .onTapGesture {
                 showSong = true
@@ -115,75 +138,7 @@ struct SettingsViewAsset: SwiftUI.View {
             .sheet(isPresented: $showSong) {
                 SongViewAsset()
             }
-        
-            
-            HStack {
-                Image(systemName:"repeat")
-                    .resizable()
-                    .frame(width : 32, height : 32)
-                    .foregroundColor(.blue)
-                    .padding(.horizontal, 10)
-                
-                VStack(alignment: .leading) {
-                    Text("Повтор будильника")
-                        .font(.headline)
-                        .foregroundColor(.white)
-                    
-                    Text("5 минут")
-                        .font(.subheadline)
-                        .foregroundColor(Color.gray.opacity(0.7))
-                }
-                
-                Spacer()
-                
-                Image(systemName:"chevron.right")
-                    .resizable()
-                    .frame(width : 12, height : 18)
-                    .foregroundColor(Color.gray.opacity(0.7))
-            }
-            .padding()
-            .onTapGesture {
-                            showRepeat = true
-                        }
-                        // добавьте этот модификатор, чтобы добавить лист, который отображает окно RepeatAlarmViewAsset
-            .sheet(isPresented: $showRepeat) {
-                RepeatAlarmViewAsset()
-            }
-            
-            HStack {
-                Image(systemName:"waveform.circle")
-                    .resizable()
-                    .frame(width : 32, height : 32)
-                    .foregroundColor(.blue)
-                    .padding(.horizontal, 10)
-                
-                VStack(alignment: .leading) {
-                    Text("Вибрация")
-                        .font(.headline)
-                        .foregroundColor(.white)
-                    
-                    Text("Включена")
-                        .font(.subheadline)
-                        .foregroundColor(Color.gray.opacity(0.7))
-                }
-                
-                Spacer()
-                
-                Image(systemName:"chevron.right")
-                    .resizable()
-                    .frame(width : 12, height : 18)
-                    .foregroundColor(Color.gray.opacity(0.7))
-            }
-            .padding()
-            
-            .onTapGesture {
-                            showVibration = true
-                        }
-                        // добавьте этот модификатор, чтобы добавить лист, который отображает окно VibrationViewAsset
-            .sheet(isPresented: $showVibration) {
-                VibrationViewAsset()
-            }
-            
+
             Divider()
                 .background(Color.gray)
             

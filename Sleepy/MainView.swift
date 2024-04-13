@@ -58,14 +58,16 @@ class AudioPlayer: NSObject, ObservableObject {
             // Измените логику метода playOrPause
             if isPlayed.isPlaying {
               player.stop()
+            player.currentTime = 0
                 isPlayed.isPlaying = false            } else {
+                    player.currentTime = 0 // Сбросить время воспроизведения
+                            player.prepareToPlay()
               player.play()
                     isPlayed.isPlaying = true
             }
         
         }
     }
-
 
 // Расширяем класс AudioPlayer, чтобы он соответствовал протоколу AVAudioPlayerDelegate
 extension AudioPlayer: AVAudioPlayerDelegate {
@@ -126,7 +128,9 @@ struct FirstAlarm: SwiftUI.View {
                     let currentDate = Date()
                     isStarted = true
                     isPresented = !isPresented
-
+                    isPlayed.isPlaying = false
+                    isPlayed.index = 0
+                    
                     // Форматирование даты и времени для записи в базу данных
                     let dateFormatter = DateFormatter()
                     dateFormatter.dateFormat = "yyyy-MM-dd"
@@ -174,6 +178,7 @@ struct FirstAlarm: SwiftUI.View {
                     } catch {
                         print("Ошибка при выборке данных: \(error)")
                     }
+                    
                 }) {
                 
                     Text("Старт")
@@ -197,15 +202,16 @@ struct FirstAlarm: SwiftUI.View {
                             let currentTime = dateFormatter.string(from: Date())
                             // Получаем время пробуждения в том же формате
                             let alarmTime = dateFormatter.string(from: wakeUpTime)
-                            // Сравниваем их, и если они совпадают, то воспроизводим звук
-                            // Но только если переменная isStarted равна true, то есть кнопка старт была нажата
-                            // И только если звук еще не играет, чтобы не прерывать его
+                            
             if currentTime == alarmTime && isStarted && !isPlayed.isPlaying && isPlayed.index == 0{
-                                audioPlayer.playOrPause()
+            audioPlayer.playOrPause()
+                                
+                
             }
         }
     }
 }
+
 
 
 

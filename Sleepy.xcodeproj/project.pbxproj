@@ -36,8 +36,6 @@
 		39CEAF602B7F82BE006CC2B0 /* MainWindowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39CEAF5F2B7F82BE006CC2B0 /* MainWindowView.swift */; };
 		39CEAF622B7F82E7006CC2B0 /* ArticleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39CEAF612B7F82E7006CC2B0 /* ArticleView.swift */; };
 		39F94B342B6E3EBE00B4E0D7 /* JournalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39F94B332B6E3EBE00B4E0D7 /* JournalView.swift */; };
-		39FE00542B7CB7E700D86D1D /* RepeatAlarmViewAsset.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39FE00532B7CB7E700D86D1D /* RepeatAlarmViewAsset.swift */; };
-		39FE00562B7CBBE600D86D1D /* VibrationViewAsset.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39FE00552B7CBBE600D86D1D /* VibrationViewAsset.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -141,8 +139,6 @@
 		39CEAF612B7F82E7006CC2B0 /* ArticleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArticleView.swift; sourceTree = "<group>"; };
 		39EC79122B8616FD00873B3B /* alarm.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = alarm.mp3; sourceTree = "<group>"; };
 		39F94B332B6E3EBE00B4E0D7 /* JournalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JournalView.swift; sourceTree = "<group>"; };
-		39FE00532B7CB7E700D86D1D /* RepeatAlarmViewAsset.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepeatAlarmViewAsset.swift; sourceTree = "<group>"; };
-		39FE00552B7CBBE600D86D1D /* VibrationViewAsset.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VibrationViewAsset.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -279,8 +275,6 @@
 				391F87C72B7A364D00AB2E2A /* SettingsViewAsset.swift */,
 				3901BA232BC2C79900F89BBA /* TimeToSleep.swift */,
 				391615362B7BB74A008118C8 /* SongViewAsset.swift */,
-				39FE00532B7CB7E700D86D1D /* RepeatAlarmViewAsset.swift */,
-				39FE00552B7CBBE600D86D1D /* VibrationViewAsset.swift */,
 			);
 			path = ProfileView;
 			sourceTree = "<group>";
@@ -507,11 +501,9 @@
 				39F94B342B6E3EBE00B4E0D7 /* JournalView.swift in Sources */,
 				391615372B7BB74A008118C8 /* SongViewAsset.swift in Sources */,
 				39AD37F72B6E401B0035A0CF /* MainView.swift in Sources */,
-				39FE00542B7CB7E700D86D1D /* RepeatAlarmViewAsset.swift in Sources */,
 				397718B32B7222230033ECCC /* WeekViewAsset.swift in Sources */,
 				3907D4602B84A446007743E1 /* TimerView.swift in Sources */,
 				3905EE2B2B6683B500280C96 /* SleepyApp.swift in Sources */,
-				39FE00562B7CBBE600D86D1D /* VibrationViewAsset.swift in Sources */,
 				3999EDDA2B737C4F00F52602 /* ShortViewAsset.swift in Sources */,
 				39443FE62B67D4BF002CB184 /* ContentView.swift in Sources */,
 				39443FE22B67D422002CB184 /* LoadingView.swift in Sources */,

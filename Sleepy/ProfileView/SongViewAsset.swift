@@ -1,65 +1,96 @@
 import SwiftUI
+import SQLite
 
-struct SongViewAsset: View {
-    // Свойство для хранения выбранного звука
-    @State private var selectedSong = "Радар"
-    
-    // Массив возможных звуков
-    let songs = ["Радар", "Пик", "Шелк", "Капля", "Маяк", "Колокольчики", "Цепь", "Сигнал", "Посмотрите на звезды", "Взлет"]
-    
-    // Свойство для хранения ссылки на окно ProfileView
+struct SongViewAsset: SwiftUI.View  {
+    @State private var selectedSong: String
+    let songs = ["Alerta", "Sirenize", "Clockwise", "Chimy", "Kevat"]
     @Environment(\.presentationMode) var presentationMode
+
+    init() {
+        // Инициализация с выбранным звуком из базы данных
+        _selectedSong = State(initialValue: SongViewAsset.fetchCurrentAlarmSound())
+    }
     
-    var body: some View {
-        NavigationView { // Добавил NavigationView
-            // Список с радиокнопками
-            
+    // Функция для получения текущего выбранного звука будильника из базы данных
+    static func fetchCurrentAlarmSound() -> String {
+        let fileManager = FileManager.default
+        let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let finalDatabaseURL = documentsDirectory.appendingPathComponent("Sleepy1.db")
+        
+        let db = try! Connection(finalDatabaseURL.path)
+        
+        let alarmSoundTable = Table("AlarmSound")
+        let soundName = Expression<String>("SoundName")
+        
+        if let currentSound = try! db.pluck(alarmSoundTable.select(soundName)) {
+            return currentSound[soundName]
+        } else {
+            return "Clockwise" // Возвращаем значение по умолчанию, если в базе данных нет записей
+        }
+    }
+
+    // Функция для обновления выбранного звука будильника в базе данных
+    func updateAlarmSound(selectedSong: String) {
+        let fileManager = FileManager.default
+        let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let finalDatabaseURL = documentsDirectory.appendingPathComponent("Sleepy1.db")
+        
+        let db = try! Connection(finalDatabaseURL.path)
+        
+        let alarmSoundTable = Table("AlarmSound")
+        let soundName = Expression<String>("SoundName")
+        let soundPath = Expression<String>("SoundPath")
+        
+        // Относительный путь к звуку
+        let relativeSoundPath = "/\(selectedSong).mp3"
+        
+        // Удаление старого значения звука будильника
+        try! db.run(alarmSoundTable.delete())
+        
+        // Добавление нового значения звука будильника
+        let insert = alarmSoundTable.insert(soundName <- selectedSong, soundPath <- relativeSoundPath)
+        try! db.run(insert)
+    }
+
+    var body: some SwiftUI.View  {
+        NavigationView {
             List {
                 ForEach(songs, id: \.self) { song in
-                    // Кнопка с текстом и изображением
                     Button(action: {
-                        // Обновить выбранный звук
+                        // Обновить выбранный звук и записать в базу данных
                         selectedSong = song
+                        updateAlarmSound(selectedSong: song)
                     }) {
                         HStack {
-                            // Изображение с радиокнопкой
                             Image(systemName: selectedSong == song ? "largecircle.fill.circle" : "circle")
                                 .foregroundColor(.blue)
-                            
-                            // Текст с названием звука
                             Text(song)
                                 .font(.headline)
-                            
-                            
                         }
                     }
-                    // Стиль кнопки без фона
                     .buttonStyle(PlainButtonStyle())
                 }
             }
-            // Удалил navigationTitle
             .navigationBarItems(leading: Button(action: {
-                // Закрыть текущее окно и вернуться к ProfileView
                 presentationMode.wrappedValue.dismiss()
             }) {
                 Image(systemName: "arrow.left")
                 Text("Назад")
             })
-            .toolbar { // Добавил toolbar
-                ToolbarItem(placement: .principal) { // Изменил placement
-                    Text("Звук")
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    Text("Выбор звука")
                         .font(.headline)
                 }
             }
         }
-        // Добавил colorScheme
         .background(Color.black)
         .colorScheme(.dark)
     }
 }
 
 struct SongViewAsset_Previews: PreviewProvider {
-    static var previews: some View {
+    static var previews: some SwiftUI.View  {
         SongViewAsset()
     }
 }
