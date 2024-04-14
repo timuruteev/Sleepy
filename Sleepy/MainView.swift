@@ -38,52 +38,61 @@ class AudioPlayer: NSObject, ObservableObject {
     // Инициализатор, который теперь будет загружать звук из базы данных
     override init() {
         super.init()
-                // Получаем путь к директории Documents
-                let fileManager = FileManager.default
-                let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
-                let databaseURL = documentsDirectory.appendingPathComponent("Sleepy1.db")
-                
-                // Подключаемся к базе данных
-                let db = try! Connection(databaseURL.path, readonly: false)
-                
-                // Определяем таблицу и выражения
-                let alarmSound = Table("AlarmSound")
-                let soundNameExpr = Expression<String>("SoundName")
-                let soundPathExpr = Expression<String>("SoundPath")
-                
-                // Выбираем последний добавленный звук будильника
-                if let lastAlarmSound = try? db.pluck(alarmSound.order(Expression<Int64>("IdAlarmSound").desc)) {
-                    let soundPath = lastAlarmSound[soundPathExpr]
-                    
-                    // Удаляем начальный слеш из пути, если он есть
-                    let trimmedSoundPath = soundPath.hasPrefix("/") ? String(soundPath.dropFirst()) : soundPath
-                    
-                    // Формируем полный путь к файлу звука, учитывая папку Sounds
-                    let soundFilePath = documentsDirectory
-                        .appendingPathComponent("Sounds", isDirectory: true)
-                        .appendingPathComponent(trimmedSoundPath).path
-                    
-                    // Проверяем, существует ли файл по этому пути
-                    if fileManager.fileExists(atPath: soundFilePath) {
-                        // Пытаемся загрузить файл звука
-                        do {
-                            self.audioPlayer = try AVAudioPlayer(contentsOf: URL(fileURLWithPath: soundFilePath))
-                        } catch {
-                            print("AVAudioPlayer could not be instantiated: \(error)")
-                        }
-                    } else {
-                        print("Audio file does not exist at the path: \(soundFilePath)")
-                    }
-                } else {
-                    print("Audio file could not be found in the database.")
+        loadLatestSound()
+    }
+    
+    // Метод для загрузки последнего звука будильника
+    func loadLatestSound() {
+        let fileManager = FileManager.default
+        let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let databaseURL = documentsDirectory.appendingPathComponent("Sleepy1.db")
+        
+        // Подключаемся к базе данных
+        let db = try! Connection(databaseURL.path, readonly: false)
+        
+        // Определяем таблицу и выражения
+        let alarmSound = Table("AlarmSound")
+        let soundPathExpr = Expression<String>("SoundPath")
+        
+        // Выбираем последний добавленный звук будильника
+        if let lastAlarmSound = try? db.pluck(alarmSound.order(Expression<Int64>("IdAlarmSound").desc)) {
+            let soundPath = lastAlarmSound[soundPathExpr]
+            
+            // Удаляем начальный слеш из пути, если он есть
+            let trimmedSoundPath = soundPath.hasPrefix("/") ? String(soundPath.dropFirst()) : soundPath
+            
+            // Формируем полный путь к файлу звука, учитывая папку Sounds
+            let soundFilePath = documentsDirectory
+                .appendingPathComponent("Sounds", isDirectory: true)
+                .appendingPathComponent(trimmedSoundPath).path
+            
+            // Проверяем, существует ли файл по этому пути
+            if fileManager.fileExists(atPath: soundFilePath) {
+                // Пытаемся загрузить файл звука
+                do {
+                    self.audioPlayer = try AVAudioPlayer(contentsOf: URL(fileURLWithPath: soundFilePath))
+                } catch {
+                    print("AVAudioPlayer could not be instantiated: \(error)")
                 }
+            } else {
+                print("Audio file does not exist at the path: \(soundFilePath)")
             }
+        } else {
+            print("Audio file could not be found in the database.")
+        }
+    }
+    
+    func updateSound() {
+        loadLatestSound()
+    }
     
     // Метод, который воспроизводит или приостанавливает звук
     func playOrPause() {
+        
+        updateSound()
+        
         guard let player = audioPlayer else { return }
 
-        
             // Измените логику метода playOrPause
             if isPlayed.isPlaying {
               player.stop()
