@@ -8,6 +8,7 @@ struct WeekViewAsset: View {
             ForEach((1...7).reversed(), id: \.self) { index in
                 Button(action: {
                     self.selectedDate = self.dateFor(index: index)
+                    
                 }) {
                     ZStack {
                         Circle()

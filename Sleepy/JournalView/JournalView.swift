@@ -35,7 +35,7 @@ struct JournalView: View {
                 DateViewAsset(selectedDate: $selectedDate)
                 WeekViewAsset(selectedDate: $selectedDate)
                 QualityViewAsset(selectedDate: $selectedDate)
-                GraphicViewAsset()
+                GraphicViewAsset(selectedDate: $selectedDate)
                 ShortViewAsset(selectedDate: $selectedDate)
                 SongsViewAsset(selectedDate: $selectedDate)
                 Spacer()
