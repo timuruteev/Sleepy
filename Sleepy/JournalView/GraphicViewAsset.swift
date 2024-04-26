@@ -6,26 +6,60 @@ struct GraphicViewAsset: SwiftUI.View {
     @State private var startTime: String = ""
     @State private var endTime: String = ""
     @State private var sleepHours: String = ""
+    @State private var noDataMessage: String = ""
+    @State private var isGraphVisible: Bool = false
     
     var body: some SwiftUI.View {
         VStack(alignment: .leading) {
                     ZStack {
+                    
+
                         SleepGraph(startTime: startTime, endTime: endTime)
                             .stroke(Color.blue, lineWidth: 2)
                             .frame(height: 200)
                             .padding(.horizontal, 20)
                             .padding(.leading, 70)
                         
-                        if sleepHours == "Сон длился меньше 30 минут" {
-                            Text(sleepHours)
+                        if sleepHours == "Сон длился меньше 30 минут" || noDataMessage != "" {
+                            Text(sleepHours.isEmpty ? noDataMessage : sleepHours)
                                 .font(.title)
                                 .foregroundColor(.white)
                                 .font(.system(size: 18, weight: .bold))
                                 .multilineTextAlignment(.center)
                         }
+                        
                     }
                     
-                    if sleepHours != "Сон длился меньше 30 минут" {
+                    .overlay(
+                                   VStack(alignment: .leading, spacing: 30) { // Вложенный VStack для выравнивания текста по левому краю
+                                       Spacer() // Пространство перед текстом "Начало"
+                                       if isGraphVisible && sleepHours != "Сон длился меньше 30 минут" {
+                                           Text("Начало")
+                                               .font(.system(size: 18, weight: .bold))
+                                               .foregroundColor(.white)
+                                               .padding(.leading, 10)
+                                       }
+                                       Spacer() // Пространство между "Начало" и "Гл. фаза"
+                                       if isGraphVisible && sleepHours != "Сон длился меньше 30 минут" {
+                                           Text("Гл. фаза")
+                                               .font(.system(size: 18, weight: .bold))
+                                               .foregroundColor(.white)
+                                               .padding(.leading, 10)
+                                       }
+                                       Spacer() // Пространство между "Гл. фаза" и "Конец"
+                                       if isGraphVisible && sleepHours != "Сон длился меньше 30 минут" {
+                                           Text("Конец")
+                                               .font(.system(size: 18, weight: .bold))
+                                               .foregroundColor(.white)
+                                               .padding(.leading, 10)
+                                       }
+                                       Spacer() // Пространство после текста "Конец"
+                                   },
+                                   alignment: .leading
+                               )
+
+                    
+                    if sleepHours != "Сон длился меньше 30 минут" && noDataMessage.isEmpty {
                         Text(sleepHours)
                             .foregroundColor(.white)
                             .font(.system(size: 18, weight: .bold))
@@ -38,62 +72,71 @@ struct GraphicViewAsset: SwiftUI.View {
                     fetchSleepData(for: selectedDate)
                 }
                 .onChange(of: selectedDate) { newDate in
+                    self.startTime = ""
+                        self.endTime = ""
+                    self.sleepHours = ""
+                    self.noDataMessage = ""
                     fetchSleepData(for: newDate)
                 }
+            
             }
     
     func fetchSleepData(for selectedDate: Date) {
-        // Путь к файлу базы данных в директории Documents
-        let fileManager = FileManager.default
-        let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
-        let finalDatabaseURL = documentsDirectory.appendingPathComponent("Sleepy1.db")
+           let fileManager = FileManager.default
+           let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
+           let finalDatabaseURL = documentsDirectory.appendingPathComponent("Sleepy1.db")
+           
+           let db = try! Connection(finalDatabaseURL.path, readonly: true)
+           
+           let statistic = Table("Statistic")
+           let idAlarm = Expression<Int64>("IdAlarm")
+           let dateAlarmExpr = Expression<String>("DateAlarm")
+           let startTimeExpr = Expression<String>("StartTime")
+           let endTimeExpr = Expression<String>("EndTime")
+           
+           let dateFormatter = DateFormatter()
+           dateFormatter.dateFormat = "yyyy-MM-dd"
+           
+           let timeFormatter = DateFormatter()
+           timeFormatter.dateFormat = "HH:mm:ss"
+           
+           let displayTimeFormatter = DateFormatter()
+           displayTimeFormatter.dateFormat = "HH:mm"
+           
+           let selectedDateString = dateFormatter.string(from: selectedDate)
+           print("Выбранная дата: \(selectedDateString)")
+           
+           let query = statistic.select(startTimeExpr, endTimeExpr)
+               .where(dateAlarmExpr == selectedDateString)
+               .order(idAlarm.desc)
+               .limit(1)
+           
+           do {
+               if let row = try db.pluck(query) {
+                   if let startTimeDate = timeFormatter.date(from: row[startTimeExpr]),
+                      let endTimeDate = timeFormatter.date(from: row[endTimeExpr]) {
+                       self.startTime = displayTimeFormatter.string(from: startTimeDate)
+                       self.endTime = displayTimeFormatter.string(from: endTimeDate)
+                       calculateSleepHours(startTime: self.startTime, endTime: self.endTime)
+                       self.isGraphVisible = true
+                   } else {
+                       self.noDataMessage = "Нет данных"
+                       self.isGraphVisible = false
+
+                   }
+               } else {
+                   self.noDataMessage = "Нет данных"
+                   self.isGraphVisible = false
+
+               }
+           } catch {
+               print("Ошибка при выборке данных: \(error)")
+               self.noDataMessage = "Нет данных"
+               self.isGraphVisible = false
+           }
         
-        let db = try! Connection(finalDatabaseURL.path, readonly: true)
-        
-        let statistic = Table("Statistic")
-        let idAlarm = Expression<Int64>("IdAlarm")
-        let dateAlarmExpr = Expression<String>("DateAlarm")
-        let startTimeExpr = Expression<String>("StartTime")
-        let endTimeExpr = Expression<String>("EndTime")
-        
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd"
-        
-        let timeFormatter = DateFormatter()
-        timeFormatter.dateFormat = "HH:mm:ss" // Формат времени в базе данных
-        
-        let displayTimeFormatter = DateFormatter()
-        displayTimeFormatter.dateFormat = "HH:mm" // Формат времени для отображения
-        
-        let selectedDateString = dateFormatter.string(from: selectedDate)
-        print("Выбранная дата: \(selectedDateString)") // Добавлен отладочный вывод
-        
-        let query = statistic.select(startTimeExpr, endTimeExpr)
-            .where(dateAlarmExpr == selectedDateString)
-            .order(idAlarm.desc) // Сортировка по убыванию IdAlarm
-            .limit(1) // Ограничение на одну запись
-        do {
-            if let row = try db.pluck(query) {
-                print("Найдена запись для даты: \(selectedDateString)") // Добавлен отладочный вывод
-                if let startTimeDate = timeFormatter.date(from: row[startTimeExpr]),
-                   let endTimeDate = timeFormatter.date(from: row[endTimeExpr]) {
-                    self.startTime = displayTimeFormatter.string(from: startTimeDate)
-                    self.endTime = displayTimeFormatter.string(from: endTimeDate)
-                    calculateSleepHours(startTime: self.startTime, endTime: self.endTime)
-                } else {
-                    print("Не удалось преобразовать время из базы данных") // Добавлен отладочный вывод
-                }
-            } else {
-                self.startTime = "Нет данных"
-                self.endTime = "Нет данных"
-                self.sleepHours = ""
-                print("Нет данных для даты: \(selectedDateString)") // Добавлен отладочный вывод
-            }
-        } catch {
-            print("Ошибка при выборке данных: \(error)")
-        }
-    }
-    
+       }
+
     func calculateSleepHours(startTime: String, endTime: String) {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "HH:mm"
@@ -102,6 +145,7 @@ struct GraphicViewAsset: SwiftUI.View {
               let endTimeDate = dateFormatter.date(from: endTime) else {
             self.sleepHours = "Недостаточно данных"
             return
+        
         }
         
         var duration = Calendar.current.dateComponents([.minute], from: startTimeDate, to: endTimeDate).minute ?? 0
