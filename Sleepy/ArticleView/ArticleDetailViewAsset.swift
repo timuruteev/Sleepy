@@ -6,11 +6,11 @@ struct ArticleDetailViewAsset: View {
     var body: some View {
         VStack {
             HStack {
-                Spacer() // Добавляем Spacer перед текстом, чтобы выровнять его по центру
+                Spacer()
                 Text(article.title)
-                    .font(.headline) // Изменяем размер шрифта на .headline
-                    .multilineTextAlignment(.center) // Выравниваем текст по центру
-                Spacer() // Добавляем Spacer после текста, чтобы сохранить его выровненным по центру
+                    .font(.headline)
+                    .multilineTextAlignment(.center)
+                Spacer()
                 Button("Готово") {
                     presentationMode.wrappedValue.dismiss()
                 }
@@ -23,7 +23,7 @@ struct ArticleDetailViewAsset: View {
                     } placeholder: {
                         ProgressView()
                     }
-                    .clipShape(RoundedRectangle(cornerRadius: 10)) // Закругление углов
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
                     .aspectRatio(contentMode: .fit)
                     Text("Важность сна для здоровья")
                         .font(.title2)
@@ -51,7 +51,7 @@ struct ArticleDetailViewAsset: View {
             }
         }
         .padding()
-        .preferredColorScheme(.dark) // Модификатор для темной темы
+        .preferredColorScheme(.dark)
     }
 }
 

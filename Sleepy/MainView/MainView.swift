@@ -93,12 +93,12 @@ class AudioPlayer: NSObject, ObservableObject {
         
         guard let player = audioPlayer else { return }
 
-            // Измените логику метода playOrPause
+            // Изменим логику метода playOrPause
             if isPlayed.isPlaying {
               player.stop()
             player.currentTime = 0
                 isPlayed.isPlaying = false            } else {
-                    player.currentTime = 0 // Сбросить время воспроизведения
+                    player.currentTime = 0 // Сбросим время воспроизведения
                             player.prepareToPlay()
               player.play()
                     isPlayed.isPlaying = true
@@ -107,9 +107,7 @@ class AudioPlayer: NSObject, ObservableObject {
         }
     }
 
-// Расширяем класс AudioPlayer, чтобы он соответствовал протоколу AVAudioPlayerDelegate
 extension AudioPlayer: AVAudioPlayerDelegate {
-    // Метод, который вызывается, когда воспроизведение звука завершается
     func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
         // Выводим сообщение в консоль, если воспроизведение завершилось успешно
         if flag {
@@ -146,9 +144,9 @@ struct FirstAlarm: SwiftUI.View {
             VStack(spacing: 30) {
                 Spacer()
                 VStack(spacing: 10) {
-                    DatePicker("", selection: $wakeUpTime, displayedComponents: .hourAndMinute) // элемент выбора времени
-                        .datePickerStyle(.wheel) // стиль элемента
-                        .labelsHidden() // скрыть метки
+                    DatePicker("", selection: $wakeUpTime, displayedComponents: .hourAndMinute)
+                        .datePickerStyle(.wheel)
+                        .labelsHidden()
                         .preferredColorScheme(.dark)
                     Text("Просыпайтесь легко между")
                         .font(.system(size: 20))
@@ -169,7 +167,6 @@ struct FirstAlarm: SwiftUI.View {
                     isPlayed.isPlaying = false
                     isPlayed.index = 0
                     
-                    // Форматирование даты и времени для записи в базу данных
                     let dateFormatter = DateFormatter()
                     dateFormatter.dateFormat = "yyyy-MM-dd"
                     let dateAlarm = dateFormatter.string(from: currentDate)
@@ -178,7 +175,6 @@ struct FirstAlarm: SwiftUI.View {
                     timeFormatter.dateFormat = "HH:mm:ss"
                     let startTime = timeFormatter.string(from: currentDate)
                     
-                    // Путь к файлу базы данных в проекте
                     let fileManager = FileManager.default
                     let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
                     let finalDatabaseURL = documentsDirectory.appendingPathComponent("Sleepy1.db")
@@ -192,22 +188,17 @@ struct FirstAlarm: SwiftUI.View {
                         }
                     }
 
-                    // Теперь используйте finalDatabaseURL.path для подключения к базе данных
                     let db = try! Connection(finalDatabaseURL.path, readonly: false)
 
-                    
-                    // Определение таблицы
                     let statistic = Table("Statistic")
                     let idAlarm = Expression<Int64>("IdAlarm")
                     let dateAlarmExpr = Expression<String>("DateAlarm")
                     let startTimeExpr = Expression<String>("StartTime")
                     let endTimeExpr = Expression<String>("EndTime")
                     
-                    // Вставка данных в таблицу
                     let insert = statistic.insert(dateAlarmExpr <- dateAlarm, startTimeExpr <- startTime, endTimeExpr <- startTime)
                     try! db.run(insert)
                     
-                    // Проверка вставки данных
                     let query = statistic.select(*)
                     do {
                         for row in try db.prepare(query) {
@@ -220,25 +211,23 @@ struct FirstAlarm: SwiftUI.View {
                 }) {
                 
                     Text("Старт")
-                        .font(.system(size: 20)) // Уменьшаем размер шрифта
+                        .font(.system(size: 20))
                         .fontWeight(.bold)
                         .foregroundColor(.white)
-                        .padding(EdgeInsets(top: 15, leading: 50, bottom: 15, trailing: 50)) // Увеличиваем горизонтальные отступы
-                        .background(Color.orange) // Меняем цвет на оранжевый
-                        .cornerRadius(50) // Увеличиваем радиус скругления
+                        .padding(EdgeInsets(top: 15, leading: 50, bottom: 15, trailing: 50))
+                        .background(Color.orange)
+                        .cornerRadius(50)
                 }
                 .sheet(isPresented: $isPresented, content: {
-                    TimerView(wakeUpTime: $wakeUpTime, audioPlayer: audioPlayer) // Передаем объект audioPlayer в TimerView
+                    TimerView(wakeUpTime: $wakeUpTime, audioPlayer: audioPlayer)
                 })
                 .padding(.horizontal)
                 Spacer()
             }
         }
-        // Добавляем модификатор onReceive, который будет получать события от таймера
+        
         .onReceive(timer) { _ in
-                            // Получаем текущее время в формате часов и минут
                             let currentTime = dateFormatter.string(from: Date())
-                            // Получаем время пробуждения в том же формате
                             let alarmTime = dateFormatter.string(from: wakeUpTime)
                             
             if currentTime == alarmTime && isStarted && !isPlayed.isPlaying && isPlayed.index == 0{

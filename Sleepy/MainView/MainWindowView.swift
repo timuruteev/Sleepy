@@ -1,23 +1,17 @@
 import SwiftUI
 
-
 struct MainWindowView: View {
-    // переменная для хранения выбранной вкладки
     @State private var selection = 0
     
     var body: some View {
-        // создаем TabView с пятью вкладками
         TabView(selection: $selection) {
-            // каждая вкладка содержит NavigationView с заголовком и текстом
             NavigationView {
                 MainView()
                             }
-            // указываем иконку, подпись и тег для каждой вкладки
             .tabItem {
                 Image(systemName: "moon.fill")
                 Text("Сон")
             }
-            // тег соответствует значению selection
             .tag(0)
             
             NavigationView {
@@ -34,7 +28,6 @@ struct MainWindowView: View {
             NavigationView {
                             
                             ArticleView()
-                   
                         }
             
                         .tabItem {
@@ -45,7 +38,6 @@ struct MainWindowView: View {
             
             NavigationView {
                 ProfileView()
-        
             }
             .tabItem {
                 Image(systemName: "person.fill")

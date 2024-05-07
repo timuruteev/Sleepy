@@ -8,7 +8,6 @@ struct WeekViewAsset: View {
             ForEach((1...7).reversed(), id: \.self) { index in
                 Button(action: {
                     self.selectedDate = self.dateFor(index: index)
-                    
                 }) {
                     ZStack {
                         Circle()
@@ -29,19 +28,15 @@ struct WeekViewAsset: View {
         Divider()
             .background(Color.gray)
     }
-    
-    // Функция для получения даты для каждого дня недели
     func dateFor(index: Int) -> Date {
             let calendar = Calendar.current
             let today = calendar.startOfDay(for: Date())
             return calendar.date(byAdding: .day, value: -index + 1, to: today)!
         }
-    
     func isDateSelected(index: Int) -> Bool {
             let calendar = Calendar.current
             return calendar.isDate(self.selectedDate, inSameDayAs: self.dateFor(index: index))
         }
-    
     func dayOfWeek(for date: Date) -> String {
             let dateFormatter = DateFormatter()
             dateFormatter.locale = Locale(identifier: "ru_RU")
@@ -50,7 +45,6 @@ struct WeekViewAsset: View {
         }
     }
 
-// Превью компонента
 struct WeekViewAsset_Previews: PreviewProvider {
     static var previews: some View {
         WeekViewAsset(selectedDate: .constant(Date()))

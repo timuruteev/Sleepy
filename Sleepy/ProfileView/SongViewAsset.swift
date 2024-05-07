@@ -7,11 +7,9 @@ struct SongViewAsset: SwiftUI.View  {
     @Environment(\.presentationMode) var presentationMode
 
     init() {
-        // Инициализация с выбранным звуком из базы данных
         _selectedSong = State(initialValue: SongViewAsset.fetchCurrentAlarmSound())
     }
     
-    // Функция для получения текущего выбранного звука будильника из базы данных
     static func fetchCurrentAlarmSound() -> String {
         let fileManager = FileManager.default
         let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
@@ -25,11 +23,10 @@ struct SongViewAsset: SwiftUI.View  {
         if let currentSound = try! db.pluck(alarmSoundTable.select(soundName)) {
             return currentSound[soundName]
         } else {
-            return "Clockwise" // Возвращаем значение по умолчанию, если в базе данных нет записей
+            return "Clockwise"
         }
     }
 
-    // Функция для обновления выбранного звука будильника в базе данных
     func updateAlarmSound(selectedSong: String) {
         let fileManager = FileManager.default
         let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
@@ -41,13 +38,10 @@ struct SongViewAsset: SwiftUI.View  {
         let soundName = Expression<String>("SoundName")
         let soundPath = Expression<String>("SoundPath")
         
-        // Относительный путь к звуку
         let relativeSoundPath = "/\(selectedSong).mp3"
         
-        // Удаление старого значения звука будильника
         try! db.run(alarmSoundTable.delete())
         
-        // Добавление нового значения звука будильника
         let insert = alarmSoundTable.insert(soundName <- selectedSong, soundPath <- relativeSoundPath)
         try! db.run(insert)
     }
@@ -57,7 +51,6 @@ struct SongViewAsset: SwiftUI.View  {
             List {
                 ForEach(songs, id: \.self) { song in
                     Button(action: {
-                        // Обновить выбранный звук и записать в базу данных
                         selectedSong = song
                         updateAlarmSound(selectedSong: song)
                     }) {

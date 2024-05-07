@@ -3,15 +3,12 @@ import SQLite
 
 struct QualityViewAsset: SwiftUI.View {
     @SwiftUI.Binding var selectedDate: Date
-    @State private var sleepQuality = 30
     @State private var startTime: String = "00:00"
     @State private var endTime: String = "00:00"
     @State private var timeInBed: String = "0ч 0мин"
     @State private var timeAsleep: String = "0ч 0мин"
 
-    // Функция для получения времени начала и окончания сна
     func fetchSleepData() {
-        // Путь к файлу базы данных в директории Documents
         let fileManager = FileManager.default
         let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
         let finalDatabaseURL = documentsDirectory.appendingPathComponent("Sleepy1.db")
@@ -31,10 +28,10 @@ struct QualityViewAsset: SwiftUI.View {
         let selectedDateString = dateFormatter.string(from: selectedDate)
 
         let timeFormatter = DateFormatter()
-        timeFormatter.dateFormat = "HH:mm:ss" // Формат времени в базе данных
+        timeFormatter.dateFormat = "HH:mm:ss"
 
         let displayTimeFormatter = DateFormatter()
-        displayTimeFormatter.dateFormat = "HH:mm" // Формат времени для отображения
+        displayTimeFormatter.dateFormat = "HH:mm"
 
         let calendar = Calendar.current
 
@@ -43,10 +40,9 @@ struct QualityViewAsset: SwiftUI.View {
                              .order(idAlarm.desc)
                              .limit(1)
 
-        // Получение значения Duration из таблицы SleepPeriod
         if let sleepPeriodRow = try? db.pluck(sleepPeriodTable) {
-            let sleepDuration = sleepPeriodRow[durationExpr] * 60 // Преобразование в секунды
-
+            let sleepDuration = sleepPeriodRow[durationExpr] * 60
+            
             do {
                 if let row = try db.pluck(query) {
                     if var startTimeDate = timeFormatter.date(from: row[startTimeExpr]),
@@ -89,13 +85,10 @@ struct QualityViewAsset: SwiftUI.View {
                 print("Ошибка при выборке данных: \(error)")
             }
         } else {
-            // Обработка случая, когда значение Duration отсутствует в таблице SleepPeriod
             self.timeAsleep = "Нет данных"
         }
     }
 
-
-    
     var body: some SwiftUI.View {
         HStack {
             HStack() {
@@ -126,7 +119,7 @@ struct QualityViewAsset: SwiftUI.View {
         .frame(maxWidth: .infinity, alignment: .leading)
         Divider()
             .background(Color.gray)
-        .onAppear(perform: fetchSleepData) // Вызов функции при появлении view
+        .onAppear(perform: fetchSleepData)
         .onChange(of: selectedDate) { _ in
             fetchSleepData()
         }
@@ -134,9 +127,7 @@ struct QualityViewAsset: SwiftUI.View {
 }
 
 struct QualityViewAsset_Previews : PreviewProvider{
-    
     static var previews:some SwiftUI.View{
-        
         QualityViewAsset(selectedDate: .constant(Date()))
             .background(Color.black)
         

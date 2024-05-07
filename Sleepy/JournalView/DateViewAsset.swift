@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct DateViewAsset: View {
-    @Binding var selectedDate: Date // Step 1: Add @Binding for selectedDate
+    @Binding var selectedDate: Date
 
     var dateFormatter: DateFormatter {
         let formatter = DateFormatter()
@@ -19,11 +19,11 @@ struct DateViewAsset: View {
     
     var body: some View {
         HStack(alignment: .center) {
-            Text(dayOfWeekFormatter.string(from: selectedDate).capitalized) // Step 2: Use selectedDate
+            Text(dayOfWeekFormatter.string(from: selectedDate).capitalized)
                 .font(.largeTitle)
                 .fontWeight(.bold)
                 .foregroundColor(.white)
-            Text(dateFormatter.string(from: selectedDate)) // Step 2: Use selectedDate
+            Text(dateFormatter.string(from: selectedDate))
                 .font(.subheadline)
                 .foregroundColor(.gray)
                 .padding(.leading, 20)
@@ -37,10 +37,9 @@ struct DateViewAsset: View {
     }
 }
 
-// Step 3: Add a Preview
 struct DateViewAsset_Previews: PreviewProvider {
     static var previews: some View {
-        DateViewAsset(selectedDate: .constant(Date())) // Use a sample date for preview
+        DateViewAsset(selectedDate: .constant(Date()))
             .background(Color.black)
     }
 }

@@ -2,9 +2,8 @@ import SwiftUI
 
 struct JournalView: View {
     @State private var currentDate = Date()
-    @State private var sleepQuality = 96
-    @State private var timeInBed = "8ч 51мин"
-    @State private var timeAsleep = "8ч 40мин"
+    @State private var timeInBed = ""
+    @State private var timeAsleep = ""
     @State private var selectedDate = Date()
     
     var dateFormatter: DateFormatter {
@@ -22,10 +21,8 @@ struct JournalView: View {
         return formatter
     }
     
-    // Добавляем переменные для нижней панели
     @State private var selectedTab = 0
     @State private var selectedButton = "Статистика"
-    
     
     var body: some View {
         ScrollView{
@@ -41,17 +38,13 @@ struct JournalView: View {
                 Spacer()
                 Spacer()
             }
-            // Добавляем нижнюю панель поверх основного вида
         }
         .background(.black)
-
     }
 }
 
 struct JournalView_Previews : PreviewProvider{
-    
     static var previews:some View{
-        
         JournalView()
             .background(Color.black)
         

@@ -28,7 +28,7 @@ struct SettingsViewAsset: SwiftUI.View {
             if let currentPeriod = try! db.pluck(sleepPeriodTable.select(duration)) {
                 return currentPeriod[duration]
             } else {
-                return 15 // Возвращаем значение по умолчанию, если в базе данных нет записей
+                return 15
             }
         }
     
@@ -45,7 +45,7 @@ struct SettingsViewAsset: SwiftUI.View {
             if let currentSound = try! db.pluck(alarmSoundTable.select(soundName)) {
                 return currentSound[soundName]
             } else {
-                return "Теплый ветер" // Возвращаем значение по умолчанию, если в базе данных нет записей
+                return "Теплый ветер"
             }
         }
     
@@ -73,12 +73,11 @@ struct SettingsViewAsset: SwiftUI.View {
                                         .font(.headline)
                                         .foregroundColor(.white)
                                     
-                                    // Используем selectedSleepPeriod для отображения текущего значения
                                     Text("\(selectedSleepPeriod) минут")
                                         .font(.subheadline)
                                         .foregroundColor(Color.gray.opacity(0.7))
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading) // добавьте эту строку, чтобы выровнять текст по левому краю
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     
                     Spacer()
                     
@@ -88,15 +87,12 @@ struct SettingsViewAsset: SwiftUI.View {
                         .foregroundColor(Color.gray.opacity(0.7))
                 }
                 .padding()
-                // добавьте этот модификатор, чтобы обернуть HStack в кнопку, которая активирует переход
                 .onAppear {
                     self.selectedSleepPeriod = SettingsViewAsset.fetchCurrentSleepPeriod()
-                    
                 }
                 .onTapGesture {
                     showWakeUpPeriod = true
                 }
-                // добавьте этот модификатор, чтобы добавить лист, который отображает окно WakeUpPeriodViewAsset
                 .sheet(isPresented: $showWakeUpPeriod) {
                     TimeToSleep()
                 }
@@ -130,18 +126,15 @@ struct SettingsViewAsset: SwiftUI.View {
                 self.selectedAlarmSound = SettingsViewAsset.fetchCurrentAlarmSound()
                 
             }
-            // добавьте этот модификатор, чтобы обернуть HStack в кнопку, которая активирует переход для звука
             .onTapGesture {
                 showSong = true
             }
-            // добавьте этот модификатор, чтобы добавить лист, который отображает окно SongViewAsset
             .sheet(isPresented: $showSong) {
                 SongViewAsset()
             }
 
             Divider()
                 .background(Color.gray)
-            
         }
     }
 }

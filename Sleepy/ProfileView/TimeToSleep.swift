@@ -7,7 +7,6 @@ struct TimeToSleep: SwiftUI.View {
     @Environment(\.presentationMode) var presentationMode
     
     init() {
-            // Инициализация с выбранным периодом из базы данных
         _selectedPeriod = State(initialValue: TimeToSleep.fetchCurrentSleepPeriod())
         }
     
@@ -24,11 +23,10 @@ struct TimeToSleep: SwiftUI.View {
             if let currentPeriod = try! db.pluck(sleepPeriodTable.select(duration)) {
                 return currentPeriod[duration]
             } else {
-                return 15 // Возвращаем значение по умолчанию, если в базе данных нет записей
+                return 15
             }
         }
     
-    // Функция для обновления периода засыпания в базе данных
     func updateSleepPeriod(newPeriod: Int) {
         let fileManager = FileManager.default
         let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
@@ -42,19 +40,15 @@ struct TimeToSleep: SwiftUI.View {
         let idSleepPeriod = Expression<Int64>("IdSleepPeriod")
         let duration = Expression<Int>("Duration")
         
-        // Удаление старого значения периода засыпания
         try! db.run(sleepPeriodTable.delete())
         
-        // Добавление нового значения периода засыпания
         let insert = sleepPeriodTable.insert(duration <- newPeriod)
         let rowId = try! db.run(insert)
         
-        // Обновление ссылки на период засыпания в таблице настроек
         if let settingId = try! db.pluck(settingsTable.select(idSetting)) {
             let setting = settingsTable.filter(idSetting == settingId[idSetting])
             try! db.run(setting.update(idSleepPeriod <- rowId))
         } else {
-            // Если запись в таблице Settings отсутствует, создаем новую
             let insertSetting = settingsTable.insert(idSleepPeriod <- rowId)
             try! db.run(insertSetting)
         }

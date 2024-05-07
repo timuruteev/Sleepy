@@ -6,7 +6,6 @@ struct InformationViewAsset: SwiftUI.View {
     @State private var numberOfNights: Int = 0
         @State private var averageSleepTime: String = "0ч 0мин"
 
-        // Функция для подсчета количества ночей и среднего времени сна
         func fetchSleepStatistics() {
             let fileManager = FileManager.default
             let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
@@ -20,7 +19,7 @@ struct InformationViewAsset: SwiftUI.View {
             let endTimeExpr = Expression<String>("EndTime")
 
             let timeFormatter = DateFormatter()
-            timeFormatter.dateFormat = "HH:mm:ss" // Формат времени в базе данных
+            timeFormatter.dateFormat = "HH:mm:ss"
 
             let query = statistic.select(startTimeExpr, endTimeExpr)
             var totalSleepTime: Int = 0
@@ -31,9 +30,7 @@ struct InformationViewAsset: SwiftUI.View {
                         if var startTimeDate = timeFormatter.date(from: row[startTimeExpr]),
                            var endTimeDate = timeFormatter.date(from: row[endTimeExpr]) {
                             
-                            // Проверка, произошел ли переход через полночь
                             if endTimeDate < startTimeDate {
-                                // Добавляем 24 часа к времени окончания, если оно раньше времени начала
                                 endTimeDate = Calendar.current.date(byAdding: .day, value: 1, to: endTimeDate)!
                             }
 
@@ -56,14 +53,12 @@ struct InformationViewAsset: SwiftUI.View {
     
     var body: some SwiftUI.View {
         VStack {
-            // Заменил текст Профиль на динамический заголовок с датой и кнопкой календаря
             HStack(alignment: .center) {
                 Text("Профиль")
                     .font(.largeTitle)
                     .fontWeight(.bold)
                     .foregroundColor(.white)
                 Spacer()
-                // Обработка нажатия кнопки
             }
             .padding()
             

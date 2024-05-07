@@ -195,12 +195,9 @@
 			isa = PBXGroup;
 			children = (
 				3911CFA92B8F3C1900271813 /* Info.plist */,
-				3905EE2A2B6683B500280C96 /* SleepyApp.swift */,
-				39443FE12B67D422002CB184 /* LoadingView.swift */,
-				39443FE52B67D4BF002CB184 /* ContentView.swift */,
-				39AD37F62B6E401B0035A0CF /* MainView.swift */,
-				39CEAF5F2B7F82BE006CC2B0 /* MainWindowView.swift */,
-				3907D45F2B84A446007743E1 /* TimerView.swift */,
+				39849EBF2BE8EDE600BD9AE3 /* LoadingView */,
+				39849EC02BE8EE1F00BD9AE3 /* MainView */,
+				39849EC12BE8EE2400BD9AE3 /* TimerView */,
 				397718B42B7223C90033ECCC /* JournalView */,
 				391330352B76744200B8184A /* ArticleView */,
 				391F87C02B7A2EF400AB2E2A /* ProfileView */,
@@ -299,6 +296,33 @@
 				3911CFA72B8DF4B700271813 /* SongsViewAsset.swift */,
 			);
 			path = JournalView;
+			sourceTree = "<group>";
+		};
+		39849EBF2BE8EDE600BD9AE3 /* LoadingView */ = {
+			isa = PBXGroup;
+			children = (
+				3905EE2A2B6683B500280C96 /* SleepyApp.swift */,
+				39443FE12B67D422002CB184 /* LoadingView.swift */,
+				39443FE52B67D4BF002CB184 /* ContentView.swift */,
+			);
+			path = LoadingView;
+			sourceTree = "<group>";
+		};
+		39849EC02BE8EE1F00BD9AE3 /* MainView */ = {
+			isa = PBXGroup;
+			children = (
+				39AD37F62B6E401B0035A0CF /* MainView.swift */,
+				39CEAF5F2B7F82BE006CC2B0 /* MainWindowView.swift */,
+			);
+			path = MainView;
+			sourceTree = "<group>";
+		};
+		39849EC12BE8EE2400BD9AE3 /* TimerView */ = {
+			isa = PBXGroup;
+			children = (
+				3907D45F2B84A446007743E1 /* TimerView.swift */,
+			);
+			path = TimerView;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -695,7 +719,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = uteev.Sleepy;
+				PRODUCT_BUNDLE_IDENTIFIER = uteevT.Sleepy;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -725,7 +749,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = uteev.Sleepy;
+				PRODUCT_BUNDLE_IDENTIFIER = uteevT.Sleepy;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;

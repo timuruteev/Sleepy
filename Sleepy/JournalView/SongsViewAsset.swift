@@ -9,7 +9,7 @@ struct SongsViewAsset: SwiftUI.View {
     @State private var audioFileURL: URL?
     @State private var audioFileName: String = ""
     @State private var audioDuration: String = ""
-    @State private var audioTitle: String = "" // Добавьте эту переменную
+    @State private var audioTitle: String = ""
     @State private var errorMessage: String?
     
     var body: some SwiftUI.View {
@@ -23,7 +23,6 @@ struct SongsViewAsset: SwiftUI.View {
                             .padding(.bottom)
             
             if let errorMessage = errorMessage {
-                // Если есть ошибка, отображаем ее вместо кнопки и информации о записи
                 Text(errorMessage)
                     .foregroundColor(.red)
             } else {
@@ -38,12 +37,12 @@ struct SongsViewAsset: SwiftUI.View {
                     .padding()
                     .alignmentGuide(.leading) { _ in 0 }
                     
-                    Spacer() // Добавьте пробел между кнопкой и текстом
+                    Spacer()
                     
-                    VStack(alignment: .trailing) { // Выровняйте текст по правому краю
-                        Text("Записано: \(audioTitle)") // Добавьте этот текст
+                    VStack(alignment: .trailing) {
+                        Text("Записано: \(audioTitle)")
                             .font(.subheadline)
-                        Text("Длительность: \(audioDuration)") // Добавьте этот текст
+                        Text("Длительность: \(audioDuration)")
                             .font(.subheadline)
                     }
                 }
@@ -57,25 +56,19 @@ struct SongsViewAsset: SwiftUI.View {
                 }
             }
     
-    
-    // Добавьте этот метод для загрузки аудиофайла из папки документов
-    func loadAudioFileFromDatabase() {
-        // Путь к файлу базы данных
+        func loadAudioFileFromDatabase() {
         let fileManager = FileManager.default
         let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
         let databaseURL = documentsDirectory.appendingPathComponent("Sleepy1.db")
         
-        // Подключение к базе данных
         let db = try! Connection(databaseURL.path, readonly: true)
         
-        // Определение таблицы и выражений
         let audioRecord = Table("AudioRecord")
         let statistic = Table("Statistic")
         let idAlarmExpr = Expression<Int64>("IdAlarm")
         let soundPathExpr = Expression<String>("SoundPath")
         let dateAlarmExpr = Expression<String>("DateAlarm")
         
-        // Получение пути к последнему аудиофайлу
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
         let selectedDateString = formatter.string(from: selectedDate)
@@ -84,15 +77,12 @@ struct SongsViewAsset: SwiftUI.View {
                                .filter(statistic[dateAlarmExpr] == selectedDateString)
                                .order(statistic[idAlarmExpr].desc)
         
-        // Получение пути к последнему аудиофайлу за выбранный день
         if let lastAudioRecord = try? db.pluck(query) {
             let relativePath = lastAudioRecord[soundPathExpr]
             let fullPath = documentsDirectory.appendingPathComponent(relativePath).path
             
-            // Проверка доступности файла и воспроизведение
             if FileManager.default.fileExists(atPath: fullPath) {
                 do {
-                    // Инициализация AVAudioPlayer и воспроизведение
                     audioPlayer = try AVAudioPlayer(contentsOf: URL(fileURLWithPath: fullPath))
                     audioDuration = formatTime(audioPlayer?.duration ?? 0)
                     
@@ -103,7 +93,7 @@ struct SongsViewAsset: SwiftUI.View {
                                     }
                     
                     audioPlayer?.prepareToPlay()
-                    self.errorMessage = nil // Очистка сообщения об ошибке, если файл найден
+                    self.errorMessage = nil
                 } catch {
                     self.errorMessage = "Ошибка при попытке воспроизвести записанный звук"
                 }
@@ -115,8 +105,6 @@ struct SongsViewAsset: SwiftUI.View {
         }
     }
 
-
-    // Добавьте этот метод для запуска и приостановки воспроизведения
     func playOrPause() {
         guard let player = audioPlayer else { return }
         if player.isPlaying {
@@ -128,15 +116,12 @@ struct SongsViewAsset: SwiftUI.View {
         }
     }
     
-    // Добавьте этот метод для форматирования времени в виде mm:ss
     func formatTime(_ time: TimeInterval) -> String {
         let seconds = Int(time) % 60
-        // Добавьте логику для выбора правильного окончания слова
         let word = seconds == 1 ? "секунда" : (seconds > 1 && seconds < 5 ? "секунды" : "секунд")
         return String(format: "%d \(word)", seconds)
     }
     
-    // Добавьте этот метод для получения даты создания файла
     func getFileCreationDate(_ url: URL) -> Date? {
         do {
             let attributes = try FileManager.default.attributesOfItem(atPath: url.path)
@@ -147,11 +132,10 @@ struct SongsViewAsset: SwiftUI.View {
         }
     }
     
-    // Добавьте этот метод для преобразования даты в строку
     func formatDate(_ date: Date) -> String {
         let formatter = DateFormatter()
-        formatter.dateFormat = "d MMMM в HH:mm" // Измените этот формат
-        formatter.locale = Locale(identifier: "ru_RU") // Добавьте эту строку для русского языка
+        formatter.dateFormat = "d MMMM в HH:mm"
+        formatter.locale = Locale(identifier: "ru_RU")
         return formatter.string(from: date)
     }
 }
