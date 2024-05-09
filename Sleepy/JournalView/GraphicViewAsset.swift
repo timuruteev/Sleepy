@@ -11,61 +11,66 @@ struct GraphicViewAsset: SwiftUI.View {
     
     var body: some SwiftUI.View {
         VStack(alignment: .leading) {
-                    ZStack {
-                    
-                        SleepGraph(startTime: startTime, endTime: endTime)
-                            .stroke(Color.blue, lineWidth: 2)
-                            .frame(height: 200)
-                            .padding(.horizontal, 20)
-                            .padding(.leading, 70)
-                        
-                        if sleepHours == "Сон длился меньше 30 минут" || noDataMessage != "" {
-                            Text(sleepHours.isEmpty ? noDataMessage : sleepHours)
-                                .font(.title)
-                                .foregroundColor(.white)
-                                .font(.system(size: 18, weight: .bold))
-                                .multilineTextAlignment(.center)
-                        }
-                        
+            ZStack {
+                
+                SleepGraph(startTime: startTime, endTime: endTime)
+                    .stroke(Color.blue, lineWidth: 2)
+                    .frame(height: 200)
+                    .padding(.horizontal, 20)
+                    .padding(.leading, 70)
+                
+                if sleepHours == "Сон длился меньше 30 минут" || noDataMessage != "" {
+                    Text(sleepHours.isEmpty ? noDataMessage : sleepHours)
+                        .font(.title)
+                        .foregroundColor(.white)
+                        .font(.system(size: 18, weight: .bold))
+                        .multilineTextAlignment(.center)
+                }
+                
+            }
+            .overlay(
+                VStack(alignment: .leading, spacing: 30) {
+                    Spacer()
+                    if isGraphVisible && sleepHours != "Сон длился меньше 30 минут" {
+                        Text("Начало")
+                            .font(.system(size: 18, weight: .bold))
+                            .foregroundColor(.white)
+                            .padding(.leading, 10)
                     }
-                    .overlay(
-                       VStack(alignment: .leading, spacing: 30) {
-                           Spacer()
-                           if isGraphVisible && sleepHours != "Сон длился меньше 30 минут" {
-                               Text("Начало")
-                                   .font(.system(size: 18, weight: .bold))
-                                   .foregroundColor(.white)
-                                   .padding(.leading, 10)
-                           }
-                           Spacer()
-                           if isGraphVisible && sleepHours != "Сон длился меньше 30 минут" {
-                               Text("Гл. фаза")
-                                   .font(.system(size: 18, weight: .bold))
-                                   .foregroundColor(.white)
-                                   .padding(.leading, 10)
-                           }
-                           Spacer()
-                           if isGraphVisible && sleepHours != "Сон длился меньше 30 минут" {
-                               Text("Конец")
-                                   .font(.system(size: 18, weight: .bold))
-                                   .foregroundColor(.white)
-                                   .padding(.leading, 10)
-                           }
-                           Spacer()
-                       },
-                       alignment: .leading
-                   )
-
-        
-        if sleepHours != "Сон длился меньше 30 минут" && noDataMessage.isEmpty {
-            Text(sleepHours)
-                .foregroundColor(.white)
-                .font(.system(size: 18, weight: .bold))
-                .multilineTextAlignment(.center)
+                    Spacer()
+                    if isGraphVisible && sleepHours != "Сон длился меньше 30 минут" {
+                        Text("Гл. фаза")
+                            .font(.system(size: 18, weight: .bold))
+                            .foregroundColor(.white)
+                            .padding(.leading, 10)
+                    }
+                    Spacer()
+                    if isGraphVisible && sleepHours != "Сон длился меньше 30 минут" {
+                        Text("Конец")
+                            .font(.system(size: 18, weight: .bold))
+                            .foregroundColor(.white)
+                            .padding(.leading, 10)
+                    }
+                    Spacer()
+                },
+                alignment: .leading
+            )
+            
+            
+            if sleepHours != "Сон длился меньше 30 минут" && noDataMessage.isEmpty {
+                HStack(spacing: 0) {
+                    ForEach(sleepHours.split(separator: " "), id: \.self) { hour in
+                        Text(String(hour))
+                            .foregroundColor(.white)
+                            .font(.system(size: 18, weight: .bold))
+                            .frame(minWidth: 0, maxWidth: .infinity)
+                    }
+                }
+                .multilineTextAlignment(.leading)
                 .padding(.horizontal, 20)
                 .padding(.leading, 70)
+            }
         }
-    }
     .onAppear {
         fetchSleepData(for: selectedDate)
     }
@@ -143,7 +148,6 @@ struct GraphicViewAsset: SwiftUI.View {
               let endTimeDate = dateFormatter.date(from: endTime) else {
             self.sleepHours = "Недостаточно данных"
             return
-        
         }
         
         var duration = Calendar.current.dateComponents([.minute], from: startTimeDate, to: endTimeDate).minute ?? 0
@@ -159,33 +163,31 @@ struct GraphicViewAsset: SwiftUI.View {
             return
         }
         
-        // Продолжаем вычисление количества часов сна
         let hours = duration / 60
-        let minutes = duration % 60
+        let interval = hours > 12 ? 2 : 1 // Интервал в часах для отображения текста
         
         var sleepHoursString = ""
-            var currentHour = Int(startTime.prefix(2))! // Текущий час начала сна
-            let endHour = Int(endTime.prefix(2))! // Час окончания сна
+        var currentHour = Int(startTime.prefix(2))! // Текущий час начала сна
+        let endHour = Int(endTime.prefix(2))! // Час окончания сна
+        
+        while true {
+            sleepHoursString += "\(currentHour)"
             
-            while true {
-                sleepHoursString += "\(currentHour)"
-                
-                if currentHour == endHour {
-                    break
-                }
-                
-                if currentHour == 23 {
-                    currentHour = 0 // Если текущий час 23, переходим на следующий день
-                } else {
-                    currentHour += 1
-                }
-                
-                sleepHoursString += " "
+            if currentHour == endHour {
+                break
             }
             
-            self.sleepHours = sleepHoursString
+            currentHour += interval // Увеличиваем на интервал
+            
+            if currentHour > 23 {
+                currentHour -= 24 // Если текущий час больше 23, переходим на следующий день
+            }
+            
+            sleepHoursString += " "
         }
-    
+        
+        self.sleepHours = sleepHoursString.trimmingCharacters(in: .whitespaces)
+    }
     
     
     struct SleepGraph: Shape {
