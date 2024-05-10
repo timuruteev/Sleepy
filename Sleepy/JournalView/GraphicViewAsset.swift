@@ -10,7 +10,8 @@ struct GraphicViewAsset: SwiftUI.View {
     @State private var isGraphVisible: Bool = false
     
     var body: some SwiftUI.View {
-        VStack(alignment: .leading) {
+        VStack(alignment: .leading) 
+        {
             ZStack {
                 
                 SleepGraph(startTime: startTime, endTime: endTime)
@@ -32,7 +33,7 @@ struct GraphicViewAsset: SwiftUI.View {
                 VStack(alignment: .leading, spacing: 30) {
                     Spacer()
                     if isGraphVisible && sleepHours != "Сон длился меньше 30 минут" {
-                        Text("Бодрст.") // Заменено с "Начало"
+                        Text("Не сон") // Заменено с "Начало"
                             .font(.system(size: 18, weight: .bold))
                             .foregroundColor(.white)
                             .padding(.leading, 10)
@@ -83,7 +84,7 @@ struct GraphicViewAsset: SwiftUI.View {
             self.noDataMessage = ""
             fetchSleepData(for: newDate)
         }
-        
+        .padding(.vertical, 10)
     }
     
     func fetchSleepData(for selectedDate: Date) {
@@ -212,14 +213,6 @@ struct GraphicViewAsset: SwiftUI.View {
             let endHour = CGFloat(endComponents[0])
             let endMinutes = CGFloat(endComponents[1])
             
-            // Расчет продолжительности сна
-            let dateFormatter = DateFormatter()
-            dateFormatter.dateFormat = "HH:mm"
-            guard let startTimeDate = dateFormatter.date(from: startTime),
-                  let endTimeDate = dateFormatter.date(from: endTime) else {
-                return path
-            }
-            
             let sleepDuration = calculateDuration(startTime: startTime, endTime: endTime)
             
             // Если продолжительность сна меньше 30 минут, не строим график
@@ -237,12 +230,18 @@ struct GraphicViewAsset: SwiftUI.View {
             let startPoint = CGPoint(x: rect.minX + xOffset, y: max(startPointY, rect.minY))
             let endPoint = CGPoint(x: rect.maxX - xOffset, y: min(endPointY, rect.maxY))
             
+            // Рисование фигуры вокруг графика волн
+            path.move(to: CGPoint(x: rect.minX, y: rect.minY))
+            path.addLine(to: CGPoint(x: rect.minX, y: rect.maxY))
+            path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
+            path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY))
+            
             // Расчет высоты волны (глубины сна)
             let waveHeight = rect.height / 12 // Высота волны до уровня "гл. фазы сна"
             let midPointY = rect.maxY - waveHeight // Уровень "гл. фазы сна"
-            let cycleLength = 90 * yOffset // Длина одного цикла сна (1,5 часа)
+            let cycleLength = 110 * yOffset // Длина одного цикла сна (1,5 часа)
 
-            // Рисование волн
+            // Рисование волн внутри фигуры
             path.move(to: startPoint)
             var currentX = startPoint.x
             let endX = endPoint.x
@@ -272,23 +271,24 @@ struct GraphicViewAsset: SwiftUI.View {
             path.addQuadCurve(to: lastNextPoint, control: lastControlPoint)
 
             return path
-            
-            // Функция для расчета продолжительности сна
-            func calculateDuration(startTime: String, endTime: String) -> Int {
-                let dateFormatter = DateFormatter()
-                dateFormatter.dateFormat = "HH:mm"
-                guard let start = dateFormatter.date(from: startTime),
-                      let end = dateFormatter.date(from: endTime) else {
-                    return 0
-                }
-                
-                var duration = Calendar.current.dateComponents([.minute], from: start, to: end).minute ?? 0
-                if duration < 0 { duration += 1440 } // Добавляем 24 часа при переходе через полночь
-                return duration
+        }
+        
+        // Функция для расчета продолжительности сна
+        func calculateDuration(startTime: String, endTime: String) -> Int {
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateFormat = "HH:mm"
+            guard let start = dateFormatter.date(from: startTime),
+                  let end = dateFormatter.date(from: endTime) else {
+                return 0
             }
+            
+            var duration = Calendar.current.dateComponents([.minute], from: start, to: end).minute ?? 0
+            if duration < 0 { duration += 1440 } // Добавляем 24 часа при переходе через полночь
+            return duration
         }
     }
-}
+
+    }
 
 struct GraphicViewAsset_Previews: PreviewProvider {
     static var previews: some SwiftUI.View {

@@ -52,6 +52,8 @@ struct ShortViewAsset: SwiftUI.View {
 
     var body: some SwiftUI.View {
             VStack {
+                Divider()
+                    .background(Color.gray)
                 HStack{
                     Image(systemName:"moon.fill")
                         .resizable()
