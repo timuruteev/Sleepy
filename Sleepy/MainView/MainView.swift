@@ -13,8 +13,6 @@ struct MainView: SwiftUI.View {
                     .tag(0)
                 SecondAlarm()
                     .tag(1)
-                ThirdAlarm()
-                    .tag(2)
             }
             .background(.black)
             .tabViewStyle(.page)
@@ -290,56 +288,6 @@ struct SecondAlarm: SwiftUI.View {
             }
         }
     }
-    
-    
-    struct ThirdAlarm: SwiftUI.View {
-        @State private var wakeUpTime = Date()
-        @State private var selectedTab = "Сон"
-        @State private var alarmIndex = 2
-        
-        var body: some SwiftUI.View {
-            ZStack {
-                VStack(spacing: 30) {
-                    Spacer()
-                    Spacer()
-                    Spacer()
-                    Spacer()
-                    Spacer()
-
-                    VStack(spacing: 10) {
-                        Text("Без интервала пробуждения.")
-                            .font(.system(size: 20))
-                            .fontWeight(.bold)
-                            .foregroundColor(.white)
-                            .multilineTextAlignment(.center)
-                        Text("Только анализ сна")
-                            .font(.system(size: 20))
-                            .fontWeight(.bold)
-                            .foregroundColor(.white)
-                            .multilineTextAlignment(.center)
-                    }
-                    Spacer()
-                    Spacer()
-
-                        Button(action: {}) {
-                            Text("Старт")
-                                .font(.system(size: 20)) // Уменьшаем размер шрифта
-                                .fontWeight(.bold)
-                                .foregroundColor(.white)
-                                .padding(EdgeInsets(top: 15, leading: 50, bottom: 15, trailing: 50)) // Увеличиваем горизонтальные отступы
-                                .background(Color.blue) // Меняем цвет на оранжевый
-                                .cornerRadius(50) // Увеличиваем радиус скругления
-                                .opacity(0.6)
-                        }
-                        .padding(.horizontal)
-                        Spacer()
-                    Spacer()
-
-                    }
-                }
-            }
-        }
-    
     
     struct MainView_Previews: PreviewProvider {
         static var previews: some SwiftUI.View {

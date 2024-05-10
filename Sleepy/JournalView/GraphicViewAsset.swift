@@ -32,24 +32,26 @@ struct GraphicViewAsset: SwiftUI.View {
                 VStack(alignment: .leading, spacing: 30) {
                     Spacer()
                     if isGraphVisible && sleepHours != "Сон длился меньше 30 минут" {
-                        Text("Начало")
+                        Text("Бодрст.") // Заменено с "Начало"
                             .font(.system(size: 18, weight: .bold))
                             .foregroundColor(.white)
                             .padding(.leading, 10)
                     }
                     Spacer()
                     if isGraphVisible && sleepHours != "Сон длился меньше 30 минут" {
-                        Text("Гл. фаза")
+                        Text("Сон") // Заменено с "Гл. фаза"
                             .font(.system(size: 18, weight: .bold))
                             .foregroundColor(.white)
                             .padding(.leading, 10)
+                            .offset(y: -30)
                     }
                     Spacer()
                     if isGraphVisible && sleepHours != "Сон длился меньше 30 минут" {
-                        Text("Конец")
+                        Text("Гл. фаза") // Заменено с "Конец"
                             .font(.system(size: 18, weight: .bold))
                             .foregroundColor(.white)
                             .padding(.leading, 10)
+                            .offset(y: -50)
                     }
                     Spacer()
                 },
@@ -71,75 +73,75 @@ struct GraphicViewAsset: SwiftUI.View {
                 .padding(.leading, 70)
             }
         }
-    .onAppear {
-        fetchSleepData(for: selectedDate)
-    }
-    .onChange(of: selectedDate) { newDate in
-        self.startTime = ""
+        .onAppear {
+            fetchSleepData(for: selectedDate)
+        }
+        .onChange(of: selectedDate) { newDate in
+            self.startTime = ""
             self.endTime = ""
-        self.sleepHours = ""
-        self.noDataMessage = ""
-        fetchSleepData(for: newDate)
+            self.sleepHours = ""
+            self.noDataMessage = ""
+            fetchSleepData(for: newDate)
+        }
+        
     }
-
-}
     
     func fetchSleepData(for selectedDate: Date) {
-           let fileManager = FileManager.default
-           let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
-           let finalDatabaseURL = documentsDirectory.appendingPathComponent("Sleepy1.db")
-           
-           let db = try! Connection(finalDatabaseURL.path, readonly: true)
-           
-           let statistic = Table("Statistic")
-           let idAlarm = Expression<Int64>("IdAlarm")
-           let dateAlarmExpr = Expression<String>("DateAlarm")
-           let startTimeExpr = Expression<String>("StartTime")
-           let endTimeExpr = Expression<String>("EndTime")
-           
-           let dateFormatter = DateFormatter()
-           dateFormatter.dateFormat = "yyyy-MM-dd"
-           
-           let timeFormatter = DateFormatter()
-           timeFormatter.dateFormat = "HH:mm:ss"
-           
-           let displayTimeFormatter = DateFormatter()
-           displayTimeFormatter.dateFormat = "HH:mm"
-           
-           let selectedDateString = dateFormatter.string(from: selectedDate)
-           print("Выбранная дата: \(selectedDateString)")
-           
-           let query = statistic.select(startTimeExpr, endTimeExpr)
-               .where(dateAlarmExpr == selectedDateString)
-               .order(idAlarm.desc)
-               .limit(1)
-           
-           do {
-               if let row = try db.pluck(query) {
-                   if let startTimeDate = timeFormatter.date(from: row[startTimeExpr]),
-                      let endTimeDate = timeFormatter.date(from: row[endTimeExpr]) {
-                       self.startTime = displayTimeFormatter.string(from: startTimeDate)
-                       self.endTime = displayTimeFormatter.string(from: endTimeDate)
-                       calculateSleepHours(startTime: self.startTime, endTime: self.endTime)
-                       self.isGraphVisible = true
-                   } else {
-                       self.noDataMessage = "Нет данных"
-                       self.isGraphVisible = false
-
-                   }
-               } else {
-                   self.noDataMessage = "Нет данных"
-                   self.isGraphVisible = false
-
-               }
-           } catch {
-               print("Ошибка при выборке данных: \(error)")
-               self.noDataMessage = "Нет данных"
-               self.isGraphVisible = false
-           }
+        let fileManager = FileManager.default
+        let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let finalDatabaseURL = documentsDirectory.appendingPathComponent("Sleepy1.db")
         
-       }
-
+        let db = try! Connection(finalDatabaseURL.path, readonly: true)
+        
+        let statistic = Table("Statistic")
+        let idAlarm = Expression<Int64>("IdAlarm")
+        let dateAlarmExpr = Expression<String>("DateAlarm")
+        let startTimeExpr = Expression<String>("StartTime")
+        let endTimeExpr = Expression<String>("EndTime")
+        
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        
+        let timeFormatter = DateFormatter()
+        timeFormatter.dateFormat = "HH:mm:ss"
+        
+        let displayTimeFormatter = DateFormatter()
+        displayTimeFormatter.dateFormat = "HH:mm"
+        
+        let selectedDateString = dateFormatter.string(from: selectedDate)
+        print("Выбранная дата: \(selectedDateString)")
+        
+        let query = statistic.select(startTimeExpr, endTimeExpr)
+            .where(dateAlarmExpr == selectedDateString)
+            .order(idAlarm.desc)
+            .limit(1)
+        
+        do {
+            if let row = try db.pluck(query) {
+                if let startTimeDate = timeFormatter.date(from: row[startTimeExpr]),
+                   let endTimeDate = timeFormatter.date(from: row[endTimeExpr]) {
+                    self.startTime = displayTimeFormatter.string(from: startTimeDate)
+                    self.endTime = displayTimeFormatter.string(from: endTimeDate)
+                    calculateSleepHours(startTime: self.startTime, endTime: self.endTime)
+                    self.isGraphVisible = true
+                } else {
+                    self.noDataMessage = "Нет данных"
+                    self.isGraphVisible = false
+                    
+                }
+            } else {
+                self.noDataMessage = "Нет данных"
+                self.isGraphVisible = false
+                
+            }
+        } catch {
+            print("Ошибка при выборке данных: \(error)")
+            self.noDataMessage = "Нет данных"
+            self.isGraphVisible = false
+        }
+        
+    }
+    
     func calculateSleepHours(startTime: String, endTime: String) {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "HH:mm"
@@ -218,34 +220,72 @@ struct GraphicViewAsset: SwiftUI.View {
                 return path
             }
             
-            var duration = Calendar.current.dateComponents([.minute], from: startTimeDate, to: endTimeDate).minute ?? 0
-            
-            // Проверка на переход через полночь
-            if duration < 0 {
-                duration += 1440 // Добавляем 24 часа
-            }
+            let sleepDuration = calculateDuration(startTime: startTime, endTime: endTime)
             
             // Если продолжительность сна меньше 30 минут, не строим график
-            if duration < 30 {
+            guard sleepDuration >= 30 else {
                 return path
             }
             
-            // Расчет точек для графика сна
-            let xOffset: CGFloat = 10
-            let startPoint = CGPoint(x: rect.minX + xOffset, y: rect.maxY - (startHour * 60 + startMinutes) * (rect.height / (24 * 60)))
-            let endPoint = CGPoint(x: rect.maxX - xOffset, y: rect.maxY - (endHour * 60 + endMinutes) * (rect.height / (24 * 60)))
+            // Расчет начальной и конечной точек для графика
+            let xOffset: CGFloat = 10 // Изменено с учетом отступов фигуры
+            let yOffset: CGFloat = rect.height / (24 * 60)
+            let startPointY = rect.maxY - (startHour * 60 + startMinutes) * yOffset
+            let endPointY = rect.maxY - (endHour * 60 + endMinutes) * yOffset
             
-            // Рисование прямоугольника без верхней линии
-            path.move(to: CGPoint(x: rect.minX, y: rect.minY))
-            path.addLine(to: CGPoint(x: rect.minX, y: rect.maxY))
-            path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
-            path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY))
+            // Убедимся, что точки находятся внутри фигуры
+            let startPoint = CGPoint(x: rect.minX + xOffset, y: max(startPointY, rect.minY))
+            let endPoint = CGPoint(x: rect.maxX - xOffset, y: min(endPointY, rect.maxY))
             
-            // Рисование линии сна
+            // Расчет высоты волны (глубины сна)
+            let waveHeight = rect.height / 12 // Высота волны до уровня "гл. фазы сна"
+            let midPointY = rect.maxY - waveHeight // Уровень "гл. фазы сна"
+            let cycleLength = 90 * yOffset // Длина одного цикла сна (1,5 часа)
+
+            // Рисование волн
             path.move(to: startPoint)
-            path.addLine(to: endPoint)
-            
+            var currentX = startPoint.x
+            let endX = endPoint.x
+            var isUp = false // Начинаем с волны, идущей вниз
+
+            while currentX < endX - cycleLength {
+                let nextX = currentX + cycleLength
+                // Поднимаем контрольную точку еще выше
+                let controlPointY = isUp ? (rect.minY + (midPointY - rect.minY) / 2) : rect.maxY
+                
+                let nextPoint = CGPoint(x: nextX, y: midPointY)
+                let controlPoint = CGPoint(x: (currentX + nextX) / 2, y: controlPointY)
+                
+                path.addQuadCurve(to: nextPoint, control: controlPoint)
+                
+                currentX = nextX
+                isUp.toggle() // Меняем направление волны
+            }
+
+            // Рисование последней волны до конечной точки
+            let lastWaveLength = endX - currentX
+            // Поднимаем контрольную точку последней волны еще выше
+            let lastControlPointY = isUp ? (rect.minY + (midPointY - rect.minY) / 2) : rect.maxY
+            let lastNextPoint = CGPoint(x: endX, y: startPoint.y)
+            let lastControlPoint = CGPoint(x: currentX + lastWaveLength / 2, y: lastControlPointY)
+
+            path.addQuadCurve(to: lastNextPoint, control: lastControlPoint)
+
             return path
+            
+            // Функция для расчета продолжительности сна
+            func calculateDuration(startTime: String, endTime: String) -> Int {
+                let dateFormatter = DateFormatter()
+                dateFormatter.dateFormat = "HH:mm"
+                guard let start = dateFormatter.date(from: startTime),
+                      let end = dateFormatter.date(from: endTime) else {
+                    return 0
+                }
+                
+                var duration = Calendar.current.dateComponents([.minute], from: start, to: end).minute ?? 0
+                if duration < 0 { duration += 1440 } // Добавляем 24 часа при переходе через полночь
+                return duration
+            }
         }
     }
 }
