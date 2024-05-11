@@ -230,37 +230,41 @@ struct FirstAlarm: SwiftUI.View {
                             
             if currentTime == alarmTime && isStarted && !isPlayed.isPlaying && isPlayed.index == 0{
             audioPlayer.playOrPause()
-                                
-                
             }
         }
     }
 }
 
-
-
-
 struct SecondAlarm: SwiftUI.View {
     @State private var wakeUpTime = Date()
     @State private var selectedTab = "Сон"
-    @State private var alarmIndex = 1
-
+    @State private var alarmIndex = 0
+    @State private var isPresented = false
+    
+    // Создаем экземпляр AudioPlayer с именем файла звука
+    @StateObject private var audioPlayer = AudioPlayer()
+    
+    // Создаем таймер, который будет запускаться каждую секунду
+    let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+    // Создаем переменную состояния, которая будет хранить, была ли нажата кнопка старт
+    @State private var isStarted = false
+    
     // Создайте DateFormatter
     let secondAlarmDateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.timeStyle = .short
         return formatter
     }()
-
+    
     var body: some SwiftUI.View {
         ZStack {
             VStack(spacing: 30) {
                 Spacer()
                 VStack(spacing: 10) {
-                    DatePicker("", selection: $wakeUpTime, displayedComponents: .hourAndMinute) // элемент выбора времени
-                                    .datePickerStyle(.wheel) // стиль элемента
-                                    .labelsHidden() // скрыть метки
-                                    .preferredColorScheme(.dark)
+                    DatePicker("", selection: $wakeUpTime, displayedComponents: .hourAndMinute)
+                        .datePickerStyle(.wheel)
+                        .labelsHidden()
+                        .preferredColorScheme(.dark)
                     Text("Без интервала пробуждения.")
                         .font(.system(size: 20))
                         .fontWeight(.bold)
@@ -273,22 +277,81 @@ struct SecondAlarm: SwiftUI.View {
                         .multilineTextAlignment(.center)
                 }
                 Spacer()
-                    Button(action: {}) {
-                        Text("Старт")
-                            .font(.system(size: 20)) // Уменьшаем размер шрифта
-                            .fontWeight(.bold)
-                            .foregroundColor(.white)
-                            .padding(EdgeInsets(top: 15, leading: 50, bottom: 15, trailing: 50)) // Увеличиваем горизонтальные отступы
-                            .background(Color.blue) // Меняем цвет на оранжевый
-                            .cornerRadius(50) // Увеличиваем радиус скругления
+                Button(action: {
+                    let currentDate = Date()
+                    isStarted = true
+                    isPresented = !isPresented
+                    isPlayed.isPlaying = false
+                    isPlayed.index = 1
+                    
+                    let dateFormatter = DateFormatter()
+                    dateFormatter.dateFormat = "yyyy-MM-dd"
+                    let dateAlarm = dateFormatter.string(from: currentDate)
+                    
+                    let timeFormatter = DateFormatter()
+                    timeFormatter.dateFormat = "HH:mm:ss"
+                    let startTime = timeFormatter.string(from: currentDate)
+                    
+                    let fileManager = FileManager.default
+                    let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
+                    let finalDatabaseURL = documentsDirectory.appendingPathComponent("Sleepy1.db")
+
+                    if !fileManager.fileExists(atPath: finalDatabaseURL.path) {
+                        let databaseBundleURL = Bundle.main.url(forResource: "Sleepy1", withExtension: "db")!
+                        do {
+                            try fileManager.copyItem(at: databaseBundleURL, to: finalDatabaseURL)
+                        } catch {
+                            print("Ошибка копирования файла базы данных: \(error)")
+                        }
                     }
-                    .padding(.horizontal)
-                    Spacer()
+
+                    let db = try! Connection(finalDatabaseURL.path, readonly: false)
+
+                    let statistic = Table("Statistic")
+                    let idAlarm = Expression<Int64>("IdAlarm")
+                    let dateAlarmExpr = Expression<String>("DateAlarm")
+                    let startTimeExpr = Expression<String>("StartTime")
+                    let endTimeExpr = Expression<String>("EndTime")
+                    
+                    let insert = statistic.insert(dateAlarmExpr <- dateAlarm, startTimeExpr <- startTime, endTimeExpr <- startTime)
+                    try! db.run(insert)
+                    
+                    let query = statistic.select(*)
+                    do {
+                        for row in try db.prepare(query) {
+                            print("IdAlarm: \(row[idAlarm]), DateAlarm: \(row[dateAlarmExpr]), StartTime: \(row[startTimeExpr]), EndTime: \(row[endTimeExpr])")
+                        }
+                    } catch {
+                        print("Ошибка при выборке данных: \(error)")
+                    }
+                    
+                }) {
+                
+                    Text("Старт")
+                        .font(.system(size: 20))
+                        .fontWeight(.bold)
+                        .foregroundColor(.white)
+                        .padding(EdgeInsets(top: 15, leading: 50, bottom: 15, trailing: 50))
+                        .background(Color.orange)
+                        .cornerRadius(50)
+                }
+                .sheet(isPresented: $isPresented, content: {
+                    TimerView(wakeUpTime: $wakeUpTime, audioPlayer: audioPlayer)
+                })
+            }
+            
+            .onReceive(timer) { _ in
+                                let currentTime = dateFormatter.string(from: Date())
+                                let alarmTime = dateFormatter.string(from: wakeUpTime)
+                                
+                if currentTime == alarmTime && isStarted && !isPlayed.isPlaying && isPlayed.index == 1{
+                audioPlayer.playOrPause()
                 }
             }
         }
     }
-    
+}
+
     struct MainView_Previews: PreviewProvider {
         static var previews: some SwiftUI.View {
             MainView()
