@@ -217,7 +217,7 @@ struct FirstAlarm: SwiftUI.View {
                         .cornerRadius(50)
                 }
                 .sheet(isPresented: $isPresented, content: {
-                    TimerView(wakeUpTime: $wakeUpTime, audioPlayer: audioPlayer)
+                    TimerView(wakeUpTime: $wakeUpTime, audioPlayer: audioPlayer, alarmIndex: 0)
                 })
                 .padding(.horizontal)
                 Spacer()
@@ -332,13 +332,16 @@ struct SecondAlarm: SwiftUI.View {
                         .fontWeight(.bold)
                         .foregroundColor(.white)
                         .padding(EdgeInsets(top: 15, leading: 50, bottom: 15, trailing: 50))
-                        .background(Color.orange)
+                        .background(Color.blue)
                         .cornerRadius(50)
                 }
                 .sheet(isPresented: $isPresented, content: {
-                    TimerView(wakeUpTime: $wakeUpTime, audioPlayer: audioPlayer)
+                    TimerView(wakeUpTime: $wakeUpTime, audioPlayer: audioPlayer, alarmIndex: 1)
                 })
+                .padding(.horizontal)
+                Spacer()
             }
+        }
             
             .onReceive(timer) { _ in
                                 let currentTime = dateFormatter.string(from: Date())
@@ -350,7 +353,7 @@ struct SecondAlarm: SwiftUI.View {
             }
         }
     }
-}
+
 
     struct MainView_Previews: PreviewProvider {
         static var previews: some SwiftUI.View {

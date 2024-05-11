@@ -9,13 +9,15 @@ struct TimerView: SwiftUI.View {
     @State private var showImage = false
     @Environment(\.presentationMode) var presentationMode
     @ObservedObject var audioPlayer: AudioPlayer
-    let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     
     @State private var isStarted = true
     @State private var audioRecorder: AVAudioRecorder!
     @State private var isRecording = false
     @State private var audioFileURL: URL?
+    @State var alarmIndex: Int
     
+    let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+
     func updateEndTime() {
         guard let cancelTime = cancelTime else { return }
         
@@ -118,13 +120,14 @@ struct TimerView: SwiftUI.View {
                             showImage = false
                         }
                     }
-
                 
-                Text("Будильник \(wakeUpTime.addingTimeInterval(-30*60), formatter: dateFormatter) – \(wakeUpTime, formatter: dateFormatter)")
-                    .font(.system(size: 20))
-                    .fontWeight(.bold)
-                    .foregroundColor(.white)
-                    .padding(.bottom, 20)
+                if alarmIndex == 0 {
+                    Text("Будильник \(wakeUpTime.addingTimeInterval(-30*60), formatter: dateFormatter) – \(wakeUpTime, formatter: dateFormatter)")
+                        .font(.system(size: 20))
+                        .fontWeight(.bold)
+                        .foregroundColor(.white)
+                        .padding(.bottom, 20)
+                }
                 Button(action: {
                                     isPlayed.isPlaying = true
                                     audioPlayer.playOrPause()
@@ -271,7 +274,10 @@ struct TimerView: SwiftUI.View {
             }
         }
 
-        #Preview {
-            TimerView(wakeUpTime: .constant(Date()), audioPlayer: AudioPlayer()) // Добавьте аргумент audioPlayer
-        }
+struct TimerView_Previews: PreviewProvider {
+    static var previews: some SwiftUI.View {
+        TimerView(wakeUpTime: .constant(Date()), audioPlayer: AudioPlayer(), alarmIndex: 0) // Укажите значение для alarmIndex
+    }
+}
+
 
