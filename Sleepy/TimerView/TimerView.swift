@@ -107,7 +107,9 @@ struct TimerView: SwiftUI.View {
                         let currentTime = dateFormatter.string(from: Date())
                         let alarmTime = dateFormatter.string(from: wakeUpTime)
                         
+                        // Проверка, соответствует ли текущее время времени срабатывания будильника
                         if currentTime == alarmTime && isStarted {
+                            // Проверка, не звучит ли уже будильник и является ли это firstalarm или secondalarm
                             if !isPlayed.isPlaying && (isPlayed.index == 0 || isPlayed.index == 1) {
                                 showImage = true
                                 audioPlayer.playOrPause()
@@ -122,7 +124,7 @@ struct TimerView: SwiftUI.View {
                     }
                 
                 if alarmIndex == 0 {
-                    Text("Будильник \(wakeUpTime.addingTimeInterval(-30*60), formatter: dateFormatter) – \(wakeUpTime, formatter: dateFormatter)")
+                    Text("Будильник \(wakeUpTime.addingTimeInterval(-30*60), formatter: dateFormatter) – \(wakeUpTime.addingTimeInterval(30*60), formatter: dateFormatter)")
                         .font(.system(size: 20))
                         .fontWeight(.bold)
                         .foregroundColor(.white)

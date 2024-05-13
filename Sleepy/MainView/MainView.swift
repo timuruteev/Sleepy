@@ -120,7 +120,8 @@ struct FirstAlarm: SwiftUI.View {
     @State private var selectedTab = "Сон"
     @State private var alarmIndex = 0
     @State private var isPresented = false
-    
+    @State private var sleepDuration: TimeInterval = 0
+
     // Создаем экземпляр AudioPlayer с именем файла звука
     @StateObject private var audioPlayer = AudioPlayer()
     
@@ -151,7 +152,7 @@ struct FirstAlarm: SwiftUI.View {
                         .fontWeight(.bold)
                         .foregroundColor(.white)
                         .multilineTextAlignment(.center)
-                    Text("\(wakeUpTime.addingTimeInterval(-30*60), formatter: dateFormatter) – \(wakeUpTime, formatter: dateFormatter)")
+                    Text("\(wakeUpTime.addingTimeInterval(-30*60), formatter: dateFormatter) – \(wakeUpTime.addingTimeInterval(30*60), formatter: dateFormatter)")
                         .font(.system(size: 20))
                         .fontWeight(.bold)
                         .foregroundColor(.white)
@@ -173,39 +174,53 @@ struct FirstAlarm: SwiftUI.View {
                     timeFormatter.dateFormat = "HH:mm:ss"
                     let startTime = timeFormatter.string(from: currentDate)
                     
-                    let fileManager = FileManager.default
-                    let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
-                    let finalDatabaseURL = documentsDirectory.appendingPathComponent("Sleepy1.db")
-
-                    if !fileManager.fileExists(atPath: finalDatabaseURL.path) {
-                        let databaseBundleURL = Bundle.main.url(forResource: "Sleepy1", withExtension: "db")!
-                        do {
-                            try fileManager.copyItem(at: databaseBundleURL, to: finalDatabaseURL)
-                        } catch {
-                            print("Ошибка копирования файла базы данных: \(error)")
+                    sleepDuration = wakeUpTime.timeIntervalSince(currentDate)
+                       
+                    if sleepDuration < 3600 {
+                        // Если до времени пробуждения осталось менее 60 минут, будильник звучит в выбранное время
+                        wakeUpTime = wakeUpTime
+                    } else {
+                        if sleepDuration <= 28800 { // Менее 8 часов
+                            wakeUpTime = wakeUpTime.addingTimeInterval(1800) // +30 минут
+                        } else {
+                            // Если до времени пробуждения осталось более 8 часов, будильник звучит через 30 минут после выбранного времени
+                            wakeUpTime = wakeUpTime.addingTimeInterval(30*60)
                         }
                     }
+                       
+                       let fileManager = FileManager.default
+                       let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
+                       let finalDatabaseURL = documentsDirectory.appendingPathComponent("Sleepy1.db")
+                       
+                       if !fileManager.fileExists(atPath: finalDatabaseURL.path) {
+                           let databaseBundleURL = Bundle.main.url(forResource: "Sleepy1", withExtension: "db")!
+                           do {
+                               try fileManager.copyItem(at: databaseBundleURL, to: finalDatabaseURL)
+                           } catch {
+                               print("Ошибка копирования файла базы данных: \(error)")
+                           }
+                       }
+                       
+                       let db = try! Connection(finalDatabaseURL.path, readonly: false)
+                       
+                       let statistic = Table("Statistic")
+                       let idAlarm = Expression<Int64>("IdAlarm")
+                       let dateAlarmExpr = Expression<String>("DateAlarm")
+                       let startTimeExpr = Expression<String>("StartTime")
+                       let endTimeExpr = Expression<String>("EndTime")
+                       
+                       let insert = statistic.insert(dateAlarmExpr <- dateAlarm, startTimeExpr <- startTime, endTimeExpr <- timeFormatter.string(from: wakeUpTime))
+                       try! db.run(insert)
+                       
+                       let query = statistic.select(*)
+                       do {
+                           for row in try db.prepare(query) {
+                               print("IdAlarm: \(row[idAlarm]), DateAlarm: \(row[dateAlarmExpr]), StartTime: \(row[startTimeExpr]), EndTime: \(row[endTimeExpr])")
+                           }
+                       } catch {
+                           print("Ошибка при выборке данных: \(error)")
+                       }
 
-                    let db = try! Connection(finalDatabaseURL.path, readonly: false)
-
-                    let statistic = Table("Statistic")
-                    let idAlarm = Expression<Int64>("IdAlarm")
-                    let dateAlarmExpr = Expression<String>("DateAlarm")
-                    let startTimeExpr = Expression<String>("StartTime")
-                    let endTimeExpr = Expression<String>("EndTime")
-                    
-                    let insert = statistic.insert(dateAlarmExpr <- dateAlarm, startTimeExpr <- startTime, endTimeExpr <- startTime)
-                    try! db.run(insert)
-                    
-                    let query = statistic.select(*)
-                    do {
-                        for row in try db.prepare(query) {
-                            print("IdAlarm: \(row[idAlarm]), DateAlarm: \(row[dateAlarmExpr]), StartTime: \(row[startTimeExpr]), EndTime: \(row[endTimeExpr])")
-                        }
-                    } catch {
-                        print("Ошибка при выборке данных: \(error)")
-                    }
-                    
                 }) {
                 
                     Text("Старт")
@@ -219,6 +234,7 @@ struct FirstAlarm: SwiftUI.View {
                 .sheet(isPresented: $isPresented, content: {
                     TimerView(wakeUpTime: $wakeUpTime, audioPlayer: audioPlayer, alarmIndex: 0)
                 })
+                
                 .padding(.horizontal)
                 Spacer()
             }
