@@ -137,6 +137,25 @@ struct FirstAlarm: SwiftUI.View {
         return formatter
     }()
 
+    func calculateWakeUpTime() {
+            let currentTime = Date()
+            let sleepDuration = wakeUpTime.timeIntervalSince(currentTime)
+            let eightHours: TimeInterval = 8 * 60 * 60
+
+            if sleepDuration < 60 * 60 {
+                // Если до времени пробуждения осталось менее 60 минут, будильник звучит в выбранное время
+                wakeUpTime = wakeUpTime
+            } else {
+                // Если до времени пробуждения осталось более 60 минут
+                if sleepDuration <= eightHours {
+                    // Если сон менее 8 часов, будильник будит пользователя позже на 30 минут
+                    wakeUpTime = wakeUpTime.addingTimeInterval(30 * 60)
+                } else {
+                    // Если сон более 8 часов, будильник будит раньше на 30 минут
+                    wakeUpTime = wakeUpTime.addingTimeInterval(-30 * 60)
+                }
+            }
+        }
     
     var body: some SwiftUI.View {
         ZStack {
@@ -160,6 +179,7 @@ struct FirstAlarm: SwiftUI.View {
                 }
                 Spacer()
                 Button(action: {
+                    calculateWakeUpTime()
                     let currentDate = Date()
                     isStarted = true
                     isPresented = !isPresented
@@ -173,20 +193,6 @@ struct FirstAlarm: SwiftUI.View {
                     let timeFormatter = DateFormatter()
                     timeFormatter.dateFormat = "HH:mm:ss"
                     let startTime = timeFormatter.string(from: currentDate)
-                    
-                    sleepDuration = wakeUpTime.timeIntervalSince(currentDate)
-                       
-                    if sleepDuration < 3600 {
-                        // Если до времени пробуждения осталось менее 60 минут, будильник звучит в выбранное время
-                        wakeUpTime = wakeUpTime
-                    } else {
-                        if sleepDuration <= 28800 { // Менее 8 часов
-                            wakeUpTime = wakeUpTime.addingTimeInterval(1800) // +30 минут
-                        } else {
-                            // Если до времени пробуждения осталось более 8 часов, будильник звучит через 30 минут после выбранного времени
-                            wakeUpTime = wakeUpTime.addingTimeInterval(30*60)
-                        }
-                    }
                        
                        let fileManager = FileManager.default
                        let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
