@@ -68,6 +68,13 @@ struct TimerView: SwiftUI.View {
         }
     }
     
+    func resetWakeUpTime() {
+            // Сброс wakeUpTime и других связанных состояний
+            wakeUpTime = Date() // Установите это на текущее время или на исходное значение, которое вы используете при инициализации
+            isStarted = false
+            // Добавьте сюда любые другие состояния, которые нужно сбросить
+        }
+    
     var body: some SwiftUI.View {
         ZStack {
             let dateFormatter: DateFormatter = {
@@ -136,6 +143,7 @@ struct TimerView: SwiftUI.View {
                                     isPlayed.isPlaying = false
                                     isPlayed.index = 2
                                     cancelTime = Date()
+                                    resetWakeUpTime()
                                     presentationMode.wrappedValue.dismiss()
                                     updateEndTime()
                                 }) {
