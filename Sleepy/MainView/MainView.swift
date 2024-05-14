@@ -138,24 +138,46 @@ struct FirstAlarm: SwiftUI.View {
     }()
 
     func calculateWakeUpTime() {
-            let currentTime = Date()
-            let sleepDuration = wakeUpTime.timeIntervalSince(currentTime)
-            let eightHours: TimeInterval = 8 * 60 * 60
+        let calendar = Calendar.current
+        let currentTime = Date()
+        let eightHours: TimeInterval = 8 * 60 * 60
 
-            if sleepDuration < 60 * 60 {
-                // Если до времени пробуждения осталось менее 60 минут, будильник звучит в выбранное время
-                wakeUpTime = wakeUpTime
+        // Рассчитываем интервал времени до wakeUpTime
+        var wakeUpComponents = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: wakeUpTime)
+        var currentComponents = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: currentTime)
+
+        // Установим дату wakeUpComponents на текущую дату, чтобы избежать проблемы перехода через полночь
+        wakeUpComponents.year = currentComponents.year
+        wakeUpComponents.month = currentComponents.month
+        wakeUpComponents.day = currentComponents.day
+
+        // Если выбранное время уже прошло, установим его на следующий день
+        if wakeUpTime < currentTime {
+            wakeUpComponents.day! += 1
+        }
+
+        // Пересчитаем wakeUpTime с учетом текущей даты
+        guard let adjustedWakeUpTime = calendar.date(from: wakeUpComponents) else { return }
+
+        // Рассчитываем интервал времени до wakeUpTime
+        let sleepDuration = adjustedWakeUpTime.timeIntervalSince(currentTime)
+
+        if sleepDuration < 60 * 60 {
+            // Если до времени пробуждения осталось менее 60 минут, будильник звучит в выбранное время
+            // Нет необходимости изменять wakeUpTime
+        } else {
+            // Если до времени пробуждения осталось более 60 минут
+            if sleepDuration <= eightHours {
+                // Если сон менее 8 часов, будильник будит пользователя позже на 30 минут
+                wakeUpTime = calendar.date(byAdding: .minute, value: 30, to: adjustedWakeUpTime)!
             } else {
-                // Если до времени пробуждения осталось более 60 минут
-                if sleepDuration <= eightHours {
-                    // Если сон менее 8 часов, будильник будит пользователя позже на 30 минут
-                    wakeUpTime = wakeUpTime.addingTimeInterval(30 * 60)
-                } else {
-                    // Если сон более 8 часов, будильник будит раньше на 30 минут
-                    wakeUpTime = wakeUpTime.addingTimeInterval(-30 * 60)
-                }
+                // Если сон более 8 часов, будильник будит раньше на 30 минут
+                wakeUpTime = calendar.date(byAdding: .minute, value: -30, to: adjustedWakeUpTime)!
             }
         }
+    }
+
+
     
     var body: some SwiftUI.View {
         ZStack {
