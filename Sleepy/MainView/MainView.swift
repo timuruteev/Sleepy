@@ -115,6 +115,7 @@ extension AudioPlayer: AVAudioPlayerDelegate {
 }
 
 
+
 struct FirstAlarm: SwiftUI.View {
     @State private var wakeUpTime = Date()
     @State private var selectedTab = "Сон"
@@ -177,6 +178,25 @@ struct FirstAlarm: SwiftUI.View {
         }
     }
 
+    func scheduleAlarmNotification(wakeUpTime: Date) {
+        let content = UNMutableNotificationContent()
+        content.title = "Будильник"
+        content.body = "Пора просыпаться! Время: \(wakeUpTime.formatted(.dateTime.hour().minute()))"
+        content.sound = UNNotificationSound.default
+
+        let triggerDate = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: wakeUpTime)
+        let trigger = UNCalendarNotificationTrigger(dateMatching: triggerDate, repeats: false)
+
+        let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: trigger)
+
+        UNUserNotificationCenter.current().add(request) { error in
+            if let error = error {
+                print("Ошибка при добавлении уведомления: \(error)")
+            } else {
+                print("Уведомление успешно запланировано на \(wakeUpTime)")
+            }
+        }
+    }
 
     
     var body: some SwiftUI.View {
@@ -202,6 +222,7 @@ struct FirstAlarm: SwiftUI.View {
                 Spacer()
                 Button(action: {
                     calculateWakeUpTime()
+                    scheduleAlarmNotification(wakeUpTime: wakeUpTime)
                     let currentDate = Date()
                     isStarted = true
                     isPresented = !isPresented
@@ -300,6 +321,28 @@ struct SecondAlarm: SwiftUI.View {
         return formatter
     }()
     
+    func scheduleAlarmNotification(wakeUpTime: Date) {
+        let content = UNMutableNotificationContent()
+        content.title = "Будильник"
+        content.body = "Пора просыпаться! Время: \(wakeUpTime.formatted(.dateTime.hour().minute()))"
+        content.sound = UNNotificationSound.default
+
+        let triggerDate = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: wakeUpTime)
+        let trigger = UNCalendarNotificationTrigger(dateMatching: triggerDate, repeats: false)
+
+        let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: trigger)
+
+        UNUserNotificationCenter.current().add(request) { error in
+            if let error = error {
+                print("Ошибка при добавлении уведомления: \(error)")
+            } else {
+                print("Уведомление успешно запланировано на \(wakeUpTime)")
+            }
+        }
+    }
+
+
+    
     var body: some SwiftUI.View {
         ZStack {
             VStack(spacing: 30) {
@@ -322,6 +365,7 @@ struct SecondAlarm: SwiftUI.View {
                 }
                 Spacer()
                 Button(action: {
+                    scheduleAlarmNotification(wakeUpTime: wakeUpTime)
                     let currentDate = Date()
                     isStarted = true
                     isPresented = !isPresented

@@ -1,6 +1,7 @@
 import SwiftUI
 import AVFoundation
 import SQLite
+import UserNotifications
 
 struct TimerView: SwiftUI.View {
     @State private var time = Date()
@@ -113,8 +114,8 @@ struct TimerView: SwiftUI.View {
                     .onReceive(timer) { _ in
                         let currentTime = dateFormatter.string(from: Date())
                         let alarmTime = dateFormatter.string(from: wakeUpTime)
-                        
                         // Проверка, соответствует ли текущее время времени срабатывания будильника
+
                         if currentTime == alarmTime && isStarted {
                             // Проверка, не звучит ли уже будильник и является ли это firstalarm или secondalarm
                             if !isPlayed.isPlaying && (isPlayed.index == 0 || isPlayed.index == 1) {
@@ -289,5 +290,4 @@ struct TimerView_Previews: PreviewProvider {
         TimerView(wakeUpTime: .constant(Date()), audioPlayer: AudioPlayer(), alarmIndex: 0) // Укажите значение для alarmIndex
     }
 }
-
 
