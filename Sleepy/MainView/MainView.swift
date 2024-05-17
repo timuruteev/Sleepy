@@ -213,12 +213,22 @@ struct FirstAlarm: SwiftUI.View {
                         .fontWeight(.bold)
                         .foregroundColor(.white)
                         .multilineTextAlignment(.center)
-                    Text("\(wakeUpTime.addingTimeInterval(-30*60), formatter: dateFormatter) – \(wakeUpTime.addingTimeInterval(30*60), formatter: dateFormatter)")
-                        .font(.system(size: 20))
-                        .fontWeight(.bold)
-                        .foregroundColor(.white)
-                        .multilineTextAlignment(.center)
-                }
+                    if Date().addingTimeInterval(60*60) > wakeUpTime {
+                                            Text("Сработает в \(wakeUpTime, formatter: dateFormatter)")
+                                                .font(.system(size: 20))
+                                                .fontWeight(.bold)
+                                                .foregroundColor(.white)
+                                                .multilineTextAlignment(.center)
+                    }
+                    else {
+                                            // В остальных случаях отображать интервал
+                                            Text("\(wakeUpTime.addingTimeInterval(-30*60), formatter: dateFormatter) – \(wakeUpTime.addingTimeInterval(30*60), formatter: dateFormatter)")
+                                                .font(.system(size: 20))
+                                                .fontWeight(.bold)
+                                                .foregroundColor(.white)
+                                                .multilineTextAlignment(.center)
+                                        }
+                                    }
                 Spacer()
                 Button(action: {
                     calculateWakeUpTime()
