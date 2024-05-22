@@ -212,8 +212,20 @@ struct FirstAlarm: SwiftUI.View {
                     let intervalToWakeUpTime = wakeUpTime.timeIntervalSinceNow
                     let calendar = Calendar.current
                     let isNextDay = wakeUpTime < Date() || calendar.isDateInTomorrow(wakeUpTime)
+                    let isCurrentTime = calendar.isDate(Date(), equalTo: wakeUpTime, toGranularity: .minute)
 
-                    if intervalToWakeUpTime < 60 * 60 && !isNextDay {
+                    if isCurrentTime {
+                        Text("Без интервала пробуждения")
+                            .font(.system(size: 20))
+                            .fontWeight(.bold)
+                            .foregroundColor(.white)
+                            .multilineTextAlignment(.center)
+                        Text("Сработает в \(wakeUpTime, formatter: dateFormatter)")
+                            .font(.system(size: 20))
+                            .fontWeight(.bold)
+                            .foregroundColor(.white)
+                            .multilineTextAlignment(.center)
+                    } else if intervalToWakeUpTime < 60 * 60 && !isNextDay {
                         Text("Без интервала пробуждения")
                             .font(.system(size: 20))
                             .fontWeight(.bold)
@@ -236,8 +248,7 @@ struct FirstAlarm: SwiftUI.View {
                             .foregroundColor(.white)
                             .multilineTextAlignment(.center)
                     }
-                    }
-                
+                }
 
                    Spacer()
                     Button(action: {
