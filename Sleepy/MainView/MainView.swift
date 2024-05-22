@@ -202,39 +202,45 @@ struct FirstAlarm: SwiftUI.View {
     var body: some SwiftUI.View {
         ZStack {
             VStack(spacing: 30) {
-                            Spacer()
-                            VStack(spacing: 10) {
-                                DatePicker("", selection: $wakeUpTime, displayedComponents: .hourAndMinute)
-                                    .datePickerStyle(.wheel)
-                                    .labelsHidden()
-                                    .preferredColorScheme(.dark)
-                                
-                                if wakeUpTime.timeIntervalSinceNow < 60 * 60 {
-                                    Text("Без интервала пробуждения")
-                                        .font(.system(size: 20))
-                                        .fontWeight(.bold)
-                                        .foregroundColor(.white)
-                                        .multilineTextAlignment(.center)
-                                    Text("Сработает в \(wakeUpTime, formatter: dateFormatter)")
-                                        .font(.system(size: 20))
-                                        .fontWeight(.bold)
-                                        .foregroundColor(.white)
-                                        .multilineTextAlignment(.center)
-                                } else {
-                                    Text("Просыпайтесь легко между")
-                                        .font(.system(size: 20))
-                                        .fontWeight(.bold)
-                                        .foregroundColor(.white)
-                                        .multilineTextAlignment(.center)
-                                    Text("\(wakeUpTime.addingTimeInterval(-30*60), formatter: dateFormatter) – \(wakeUpTime.addingTimeInterval(30*60), formatter: dateFormatter)")
-                                        .font(.system(size: 20))
-                                        .fontWeight(.bold)
-                                        .foregroundColor(.white)
-                                        .multilineTextAlignment(.center)
-                                }
-                            }
-                            Spacer()
-                Button(action: {
+                Spacer()
+                VStack(spacing: 10) {
+                    DatePicker("", selection: $wakeUpTime, displayedComponents: .hourAndMinute)
+                        .datePickerStyle(.wheel)
+                        .labelsHidden()
+                        .preferredColorScheme(.dark)
+
+                    let intervalToWakeUpTime = wakeUpTime.timeIntervalSinceNow
+                    let calendar = Calendar.current
+                    let isNextDay = wakeUpTime < Date() || calendar.isDateInTomorrow(wakeUpTime)
+
+                    if intervalToWakeUpTime < 60 * 60 && !isNextDay {
+                        Text("Без интервала пробуждения")
+                            .font(.system(size: 20))
+                            .fontWeight(.bold)
+                            .foregroundColor(.white)
+                            .multilineTextAlignment(.center)
+                        Text("Сработает в \(wakeUpTime, formatter: dateFormatter)")
+                            .font(.system(size: 20))
+                            .fontWeight(.bold)
+                            .foregroundColor(.white)
+                            .multilineTextAlignment(.center)
+                    } else {
+                        Text("Просыпайтесь легко между")
+                            .font(.system(size: 20))
+                            .fontWeight(.bold)
+                            .foregroundColor(.white)
+                            .multilineTextAlignment(.center)
+                        Text("\(wakeUpTime.addingTimeInterval(-30*60), formatter: dateFormatter) – \(wakeUpTime.addingTimeInterval(30*60), formatter: dateFormatter)")
+                            .font(.system(size: 20))
+                            .fontWeight(.bold)
+                            .foregroundColor(.white)
+                            .multilineTextAlignment(.center)
+                    }
+                    }
+                
+
+                   Spacer()
+                    Button(action: {
                     calculateWakeUpTime()
                     scheduleAlarmNotification(wakeUpTime: wakeUpTime)
                     let currentDate = Date()
