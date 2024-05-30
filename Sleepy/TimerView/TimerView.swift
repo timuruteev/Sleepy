@@ -8,6 +8,7 @@ struct TimerView: SwiftUI.View {
     @SwiftUI.Binding var wakeUpTime: Date
     @State private var cancelTime: Date?
     @State private var showImage = false
+    @State private var showSnoozeButton = false
     @Environment(\.presentationMode) var presentationMode
     @ObservedObject var audioPlayer: AudioPlayer
     
@@ -80,6 +81,7 @@ struct TimerView: SwiftUI.View {
         // Остановка текущей мелодии будильника
         audioPlayer.playOrPause()
         showImage = false
+        showSnoozeButton = false
         
         // Установка нового будильника через 10 минут
         wakeUpTime = Date().addingTimeInterval(1 * 60)
@@ -130,6 +132,7 @@ struct TimerView: SwiftUI.View {
                             // Проверка, не звучит ли уже будильник и является ли это firstalarm или secondalarm
                             if !isPlayed.isPlaying && (isPlayed.index == 0 || isPlayed.index == 1) {
                                 showImage = true
+                                showSnoozeButton = true
                                 audioPlayer.playOrPause()
                                 isPlayed.isPlaying = true
                             }
@@ -138,6 +141,7 @@ struct TimerView: SwiftUI.View {
                             audioPlayer.playOrPause()
                             isPlayed.isPlaying = false
                             showImage = false
+                            showSnoozeButton = false
                         }
                     }
                 
@@ -193,16 +197,18 @@ struct TimerView: SwiftUI.View {
                         .cornerRadius(50)
                 }
                 
-                Button(action: {
-                    snoozeAlarm()
-                }) {
-                    Text("Повтор")
-                        .font(.system(size: 20))
-                        .fontWeight(.bold)
-                        .foregroundColor(.white)
-                        .padding(EdgeInsets(top: 15, leading: 50, bottom: 15, trailing: 50))
-                        .background(Color.orange)
-                        .cornerRadius(50)
+                if showSnoozeButton {
+                    Button(action: {
+                        snoozeAlarm()
+                    }) {
+                        Text("Повтор")
+                            .font(.system(size: 20))
+                            .fontWeight(.bold)
+                            .foregroundColor(.white)
+                            .padding(EdgeInsets(top: 15, leading: 50, bottom: 15, trailing: 50))
+                            .background(Color.orange)
+                            .cornerRadius(50)
+                    }
                 }
             }
         }
@@ -225,6 +231,7 @@ struct TimerView: SwiftUI.View {
         let db = try! Connection(finalDatabaseURL.path, readonly: false)
         
         let audioRecord = Table("AudioRecord")
+        
         let idAlarmExpr = Expression<Int64>("IdAlarm")
         let soundPathExpr = Expression<String>("SoundPath")
         
