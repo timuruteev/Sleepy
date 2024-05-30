@@ -8,104 +8,147 @@ struct SettingsViewAsset: SwiftUI.View {
     @State private var showVibration = false
     @State private var selectedSleepPeriod: Int = 15
     @State private var selectedAlarmSound: String = "Теплый ветер"
+    @State private var selectedSnoozePeriod: Int = 5
     
     init() {
         _selectedSleepPeriod = State(initialValue: SettingsViewAsset.fetchCurrentSleepPeriod())
         _selectedAlarmSound = State(initialValue: SettingsViewAsset.fetchCurrentAlarmSound())
+        _selectedSnoozePeriod = State(initialValue: SettingsViewAsset.fetchCurrentSnoozePeriod())
     }
     
     static func fetchCurrentSleepPeriod() -> Int {
-        
-            let fileManager = FileManager.default
-            let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
-            let finalDatabaseURL = documentsDirectory.appendingPathComponent("Sleepy1.db")
-            
-            let db = try! Connection(finalDatabaseURL.path)
-            
-            let sleepPeriodTable = Table("SleepPeriod")
-            let duration = Expression<Int>("Duration")
-            
-            if let currentPeriod = try! db.pluck(sleepPeriodTable.select(duration)) {
-                return currentPeriod[duration]
-            } else {
-                return 15
-            }
+        let fileManager = FileManager.default
+        let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let finalDatabaseURL = documentsDirectory.appendingPathComponent("Sleepy1.db")
+        let db = try! Connection(finalDatabaseURL.path)
+        let sleepPeriodTable = Table("SleepPeriod")
+        let duration = Expression<Int>("Duration")
+        if let currentPeriod = try! db.pluck(sleepPeriodTable.select(duration)) {
+            return currentPeriod[duration]
+        } else {
+            return 15
         }
+    }
     
     static func fetchCurrentAlarmSound() -> String {
-            let fileManager = FileManager.default
-            let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
-            let finalDatabaseURL = documentsDirectory.appendingPathComponent("Sleepy1.db")
-            
-            let db = try! Connection(finalDatabaseURL.path)
-            
-            let alarmSoundTable = Table("AlarmSound")
-            let soundName = Expression<String>("SoundName")
-            
-            if let currentSound = try! db.pluck(alarmSoundTable.select(soundName)) {
-                return currentSound[soundName]
-            } else {
-                return "Теплый ветер"
-            }
+        let fileManager = FileManager.default
+        let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let finalDatabaseURL = documentsDirectory.appendingPathComponent("Sleepy1.db")
+        let db = try! Connection(finalDatabaseURL.path)
+        let alarmSoundTable = Table("AlarmSound")
+        let soundName = Expression<String>("SoundName")
+        if let currentSound = try! db.pluck(alarmSoundTable.select(soundName)) {
+            return currentSound[soundName]
+        } else {
+            return "Теплый ветер"
         }
+    }
+    
+    static func fetchCurrentSnoozePeriod() -> Int {
+        let fileManager = FileManager.default
+        let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let finalDatabaseURL = documentsDirectory.appendingPathComponent("Sleepy1.db")
+        let db = try! Connection(finalDatabaseURL.path)
+        let snoozePeriodTable = Table("SnoozePeriod")
+        let duration = Expression<Int>("Duration")
+        if let currentPeriod = try! db.pluck(snoozePeriodTable.select(duration)) {
+            return currentPeriod[duration]
+        } else {
+            return 5
+        }
+    }
     
     var body: some SwiftUI.View {
-            VStack(alignment: .leading) {
-                Text("Настройки")
-                    .font(.title)
-                    .fontWeight(.bold)
-                    .foregroundColor(.white)
-                    .padding()
-                
-                Divider()
-                    .background(Color.gray)
-                
-                
-                HStack {
-                    Image(systemName:"clock.fill")
-                        .resizable()
-                        .frame(width : 30, height : 30)
-                        .foregroundColor(.blue)
-                        .padding(.horizontal, 10)
-                    
-                    VStack(alignment: .leading) {
-                                    Text("Период засыпания")
-                                        .font(.headline)
-                                        .foregroundColor(.white)
-                                    
-                                    Text("\(selectedSleepPeriod) минут")
-                                        .font(.subheadline)
-                                        .foregroundColor(Color.gray.opacity(0.7))
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    
-                    Spacer()
-                    
-                    Image(systemName:"chevron.right")
-                        .resizable()
-                        .frame(width : 12, height : 18)
-                        .foregroundColor(Color.gray.opacity(0.7))
-                }
+        VStack(alignment: .leading) {
+            Text("Настройки")
+                .font(.title)
+                .fontWeight(.bold)
+                .foregroundColor(.white)
                 .padding()
-                .onAppear {
-                    self.selectedSleepPeriod = SettingsViewAsset.fetchCurrentSleepPeriod()
-                }
-                .onTapGesture {
-                    showWakeUpPeriod = true
-                }
-                .sheet(isPresented: $showWakeUpPeriod) {
-                    TimeToSleep()
-                }
+            
+            Divider()
+                .background(Color.gray)
             
             HStack {
-                Image(systemName:"music.note")
+                Image(systemName:"repeat")
                     .resizable()
-                    .frame(width : 22, height : 32)
+                    .frame(width: 22, height: 32)
                     .foregroundColor(.blue)
                     .padding(.horizontal, 10)
                 
                 VStack(alignment: .leading) {
-                    Text("Звук")
+                    Text("Повтор будильника")
+                        .font(.headline)
+                        .foregroundColor(.white)
+                    
+                    Text("\(selectedSnoozePeriod) минут")
+                        .font(.subheadline)
+                        .foregroundColor(Color.gray.opacity(0.7))
+                }
+                .padding(5)
+                Spacer()
+                
+                Image(systemName:"chevron.right")
+                    .resizable()
+                    .frame(width: 12, height: 18)
+                    .foregroundColor(Color.gray.opacity(0.7))
+            }
+            .padding()
+            .onAppear {
+                self.selectedSnoozePeriod = SettingsViewAsset.fetchCurrentSnoozePeriod()
+            }
+            .onTapGesture {
+                showRepeat = true
+            }
+            .sheet(isPresented: $showRepeat) {
+                SnoozeViewAsset()
+            }
+            
+            HStack {
+                Image(systemName:"clock.fill")
+                    .resizable()
+                    .frame(width: 30, height: 30)
+                    .foregroundColor(.blue)
+                    .padding(.horizontal, 10)
+                
+                VStack(alignment: .leading) {
+                    Text("Период засыпания")
+                        .font(.headline)
+                        .foregroundColor(.white)
+                    
+                    Text("\(selectedSleepPeriod) минут")
+                        .font(.subheadline)
+                        .foregroundColor(Color.gray.opacity(0.7))
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                
+                Spacer()
+                
+                Image(systemName:"chevron.right")
+                    .resizable()
+                    .frame(width: 12, height: 18)
+                    .foregroundColor(Color.gray.opacity(0.7))
+            }
+            .padding()
+            .onAppear {
+                self.selectedSleepPeriod = SettingsViewAsset.fetchCurrentSleepPeriod()
+            }
+            .onTapGesture {
+                showWakeUpPeriod = true
+            }
+            .sheet(isPresented: $showWakeUpPeriod) {
+                TimeToSleep()
+            }
+            
+            HStack {
+                Image(systemName:"music.note")
+                    .resizable()
+                    .frame(width: 22, height: 32)
+                    .foregroundColor(.blue)
+                    .padding(.horizontal, 10)
+                
+                VStack(alignment: .leading) {
+                    Text("Звук будильника")
                         .font(.headline)
                         .foregroundColor(.white)
                     
@@ -118,13 +161,12 @@ struct SettingsViewAsset: SwiftUI.View {
                 
                 Image(systemName:"chevron.right")
                     .resizable()
-                    .frame(width : 12, height : 18)
+                    .frame(width: 12, height: 18)
                     .foregroundColor(Color.gray.opacity(0.7))
             }
             .padding()
             .onAppear {
                 self.selectedAlarmSound = SettingsViewAsset.fetchCurrentAlarmSound()
-                
             }
             .onTapGesture {
                 showSong = true
@@ -132,7 +174,7 @@ struct SettingsViewAsset: SwiftUI.View {
             .sheet(isPresented: $showSong) {
                 SongViewAsset()
             }
-
+            
             Divider()
                 .background(Color.gray)
         }

@@ -70,11 +70,21 @@ struct TimerView: SwiftUI.View {
     }
     
     func resetWakeUpTime() {
-            // Сброс wakeUpTime и других связанных состояний
-            wakeUpTime = Date() // Установите это на текущее время или на исходное значение, которое вы используете при инициализации
-            isStarted = false
-            // Добавьте сюда любые другие состояния, которые нужно сбросить
-        }
+        // Сброс wakeUpTime и других связанных состояний
+        wakeUpTime = Date() // Установите это на текущее время или на исходное значение, которое вы используете при инициализации
+        isStarted = false
+        // Добавьте сюда любые другие состояния, которые нужно сбросить
+    }
+    
+    func snoozeAlarm() {
+        // Остановка текущей мелодии будильника
+        audioPlayer.playOrPause()
+        showImage = false
+        
+        // Установка нового будильника через 10 минут
+        wakeUpTime = Date().addingTimeInterval(1 * 60)
+        isStarted = true
+    }
     
     var body: some SwiftUI.View {
         ZStack {
@@ -89,14 +99,14 @@ struct TimerView: SwiftUI.View {
             VStack {
                 
                 if showImage {
-                                // Используйте Image(uiImage:) для загрузки GIF напрямую
-                                if let image = UIImage(named: "Clock") {
-                                    Image(uiImage: image)
-                                        .resizable()
-                                        .scaledToFit()
-                                        .frame(width: 200, height: 200)
-                                }
-                            }
+                    // Используйте Image(uiImage:) для загрузки GIF напрямую
+                    if let image = UIImage(named: "Clock") {
+                        Image(uiImage: image)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 200, height: 200)
+                    }
+                }
                 
                 Text(wakeUpTime, style: .time)
                     .font(.system(size: 80, weight: .bold, design: .monospaced))
@@ -139,17 +149,16 @@ struct TimerView: SwiftUI.View {
                         .padding(.bottom, 20)
                 }
                 Button(action: {
-                                    isPlayed.isPlaying = true
-                                    audioPlayer.playOrPause()
-                                    isPlayed.isPlaying = false
-                                    isPlayed.index = 2
-                                    cancelTime = Date()
-                                    resetWakeUpTime()
-                                    presentationMode.wrappedValue.dismiss()
-                                    updateEndTime()
-                                }) {
+                    isPlayed.isPlaying = true
+                    audioPlayer.playOrPause()
+                    isPlayed.isPlaying = false
+                    isPlayed.index = 2
+                    cancelTime = Date()
+                    resetWakeUpTime()
+                    presentationMode.wrappedValue.dismiss()
+                    updateEndTime()
+                }) {
                     Text("Отмена")
-                    
                         .font(.system(size: 20))
                         .fontWeight(.bold)
                         .foregroundColor(.white)
@@ -183,9 +192,20 @@ struct TimerView: SwiftUI.View {
                         .background(Color.blue)
                         .cornerRadius(50)
                 }
+                
+                Button(action: {
+                    snoozeAlarm()
+                }) {
+                    Text("Повтор")
+                        .font(.system(size: 20))
+                        .fontWeight(.bold)
+                        .foregroundColor(.white)
+                        .padding(EdgeInsets(top: 15, leading: 50, bottom: 15, trailing: 50))
+                        .background(Color.orange)
+                        .cornerRadius(50)
+                }
             }
         }
-        
     }
     
     func getRelativePathForAudioFile(_ audioFileURL: URL) -> String {
@@ -209,85 +229,84 @@ struct TimerView: SwiftUI.View {
         let soundPathExpr = Expression<String>("SoundPath")
         
         let insert = audioRecord.insert(idAlarmExpr <- idAlarmValue,
-                                                    soundPathExpr <- relativePath)
-                try! db.run(insert)
-                
-                print("Saved audio record with path: \(audioFileURL.path)")
-            }
+                                        soundPathExpr <- relativePath)
+        try! db.run(insert)
+        
+        print("Saved audio record with path: \(audioFileURL.path)")
+    }
+    
+    func startRecording() {
+        let audioSession = AVAudioSession.sharedInstance()
+        do {
+            try audioSession.setCategory(.record)
+            try audioSession.setActive(true)
             
-            func startRecording() {
-                let audioSession = AVAudioSession.sharedInstance()
-                do {
-                    try audioSession.setCategory(.record)
-                    try audioSession.setActive(true)
-                    
-                    let documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-                    let dateFormatter = DateFormatter()
-                    dateFormatter.dateFormat = "yyyy-MM-dd_HH-mm-ss"
-                    let dateString = dateFormatter.string(from: Date())
-                    let fileName = "\(dateString).m4a"
-                    audioFileURL = documentsURL.appendingPathComponent(fileName)
-                    
-                    let settings = [
-                        AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
-                        AVSampleRateKey: 12000,
-                        AVNumberOfChannelsKey: 1,
-                        AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue
-                    ]
-                    
-                    audioRecorder = try AVAudioRecorder(url: audioFileURL!, settings: settings)
-                    audioRecorder.record()
-                    
-                    isRecording = true
-                } catch {
-                    // Обработайте возможные ошибки
-                    print("Failed to start recording: \(error)")
-                }
-            }
+            let documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateFormat = "yyyy-MM-dd_HH-mm-ss"
+            let dateString = dateFormatter.string(from: Date())
+            let fileName = "\(dateString).m4a"
+            audioFileURL = documentsURL.appendingPathComponent(fileName)
             
-            func stopRecording() {
-                audioRecorder.stop()
-                let audioSession = AVAudioSession.sharedInstance()
-                do {
-                    try audioSession.setActive(false)
-                } catch {
-                    // Обработайте возможные ошибки
-                    print("Failed to deactivate audio session: \(error)")
-                }
-                
-                isRecording = false
-                
-                let fileManager = FileManager.default
-                let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
-                let finalDatabaseURL = documentsDirectory.appendingPathComponent("Sleepy1.db")
-
-                if !fileManager.fileExists(atPath: finalDatabaseURL.path) {
-                    let databaseBundleURL = Bundle.main.url(forResource: "Sleepy1", withExtension: "db")!
-                    do {
-                        try fileManager.copyItem(at: databaseBundleURL, to: finalDatabaseURL)
-                    } catch {
-                        print("Ошибка копирования файла базы данных: \(error)")
-                    }
-                }
-
-                let db = try! Connection(finalDatabaseURL.path, readonly: false)
-
-                let statistic = Table("Statistic")
-                
-                let idAlarm = Expression<Int64>("IdAlarm")
-                if let lastIdAlarm = try? db.scalar(statistic.select(idAlarm.max)) {
-                    saveRecordingToDatabase(idAlarmValue: lastIdAlarm, audioFileURL: audioFileURL!)
-                } else {
-                    print("Не удалось получить IdAlarm из таблицы Statistic")
-                }
-                
-                print("Saved audio file at \(audioFileURL!)")
+            let settings = [
+                AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
+                AVSampleRateKey: 12000,
+                AVNumberOfChannelsKey: 1,
+                AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue
+            ]
+            
+            audioRecorder = try AVAudioRecorder(url: audioFileURL!, settings: settings)
+            audioRecorder.record()
+            
+            isRecording = true
+        } catch {
+            // Обработайте возможные ошибки
+            print("Failed to start recording: \(error)")
+        }
+    }
+    
+    func stopRecording() {
+        audioRecorder.stop()
+        let audioSession = AVAudioSession.sharedInstance()
+        do {
+            try audioSession.setActive(false)
+        } catch {
+            // Обработайте возможные ошибки
+            print("Failed to deactivate audio session: \(error)")
+        }
+        
+        isRecording = false
+        
+        let fileManager = FileManager.default
+        let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let finalDatabaseURL = documentsDirectory.appendingPathComponent("Sleepy1.db")
+        
+        if (!fileManager.fileExists(atPath: finalDatabaseURL.path)) {
+            let databaseBundleURL = Bundle.main.url(forResource: "Sleepy1", withExtension: "db")!
+            do {
+                try fileManager.copyItem(at: databaseBundleURL, to: finalDatabaseURL)
+            } catch {
+                print("Ошибка копирования файла базы данных: \(error)")
             }
         }
+        
+        let db = try! Connection(finalDatabaseURL.path, readonly: false)
+        
+        let statistic = Table("Statistic")
+        
+        let idAlarm = Expression<Int64>("IdAlarm")
+        if let lastIdAlarm = try? db.scalar(statistic.select(idAlarm.max)) {
+            saveRecordingToDatabase(idAlarmValue: lastIdAlarm, audioFileURL: audioFileURL!)
+        } else {
+            print("Не удалось получить IdAlarm из таблицы Statistic")
+        }
+        
+        print("Saved audio file at \(audioFileURL!)")
+    }
+}
 
 struct TimerView_Previews: PreviewProvider {
     static var previews: some SwiftUI.View {
         TimerView(wakeUpTime: .constant(Date()), audioPlayer: AudioPlayer(), alarmIndex: 0) // Укажите значение для alarmIndex
     }
 }
-
