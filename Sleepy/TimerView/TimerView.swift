@@ -83,11 +83,36 @@ struct TimerView: SwiftUI.View {
         showImage = false
         showSnoozeButton = false
         
-        // Установка нового будильника через 10 минут
-        wakeUpTime = Date().addingTimeInterval(1 * 60)
+        // Получаем время повтора из базы данных
+        let snoozeDuration = fetchSnoozeDuration() ?? 60 // Значение по умолчанию - 1 минута
+        
+        // Установка нового будильника с учетом времени повтора
+        wakeUpTime = Date().addingTimeInterval(TimeInterval(snoozeDuration * 60))
         isStarted = true
     }
-    
+
+    // Функция для получения времени повтора из таблицы SnoozePeriod
+    func fetchSnoozeDuration() -> Int? {
+        let fileManager = FileManager.default
+        let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let databaseURL = documentsDirectory.appendingPathComponent("Sleepy1.db")
+        
+        // Подключаемся к базе данных
+        let db = try! Connection(databaseURL.path, readonly: false)
+        
+        // Определяем таблицу и выражения
+        let snoozePeriod = Table("SnoozePeriod")
+        let durationExpr = Expression<Int>("Duration")
+        
+        // Выбираем последнее добавленное значение времени повтора
+        if let lastSnoozePeriod = try? db.pluck(snoozePeriod.order(Expression<Int64>("IdSnoozePeriod").desc)) {
+            return lastSnoozePeriod[durationExpr]
+        } else {
+            print("Snooze duration could not be found in the database.")
+            return nil
+        }
+    }
+
     var body: some SwiftUI.View {
         ZStack {
             let dateFormatter: DateFormatter = {

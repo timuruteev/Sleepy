@@ -3,7 +3,7 @@ import SQLite
 
 struct SnoozeViewAsset: SwiftUI.View {
     @State private var selectedPeriod = 10
-    let periods = [5, 10, 15, 30, 45, 60]
+    let periods = [1, 5, 10, 15, 30, 45, 60]
     @Environment(\.presentationMode) var presentationMode
     
     init() {
