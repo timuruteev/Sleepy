@@ -127,7 +127,7 @@ struct FirstAlarm: SwiftUI.View {
     @StateObject private var audioPlayer = AudioPlayer()
     
     // Создаем таймер, который будет запускаться каждую секунду
-    let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+    let timer = Timer.publish(every: 0.001, on: .main, in: .common).autoconnect()
     // Создаем переменную состояния, которая будет хранить, была ли нажата кнопка старт
     @State private var isStarted = false
     
@@ -341,7 +341,7 @@ struct SecondAlarm: SwiftUI.View {
     @StateObject private var audioPlayer = AudioPlayer()
     
     // Создаем таймер, который будет запускаться каждую секунду
-    let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+    let timer = Timer.publish(every: 0.00001, on: .main, in: .common).autoconnect()
     // Создаем переменную состояния, которая будет хранить, была ли нажата кнопка старт
     @State private var isStarted = false
     

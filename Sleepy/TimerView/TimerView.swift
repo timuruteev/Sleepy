@@ -11,14 +11,13 @@ struct TimerView: SwiftUI.View {
     @Environment(\.presentationMode) var presentationMode
     @ObservedObject var audioPlayer: AudioPlayer
     
-    @State private var isAlarmPlaying = false
     @State private var isStarted = true
     @State private var audioRecorder: AVAudioRecorder!
     @State private var isRecording = false
     @State private var audioFileURL: URL?
     @State var alarmIndex: Int
     
-    let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+    let timer = Timer.publish(every: 0.00001, on: .main, in: .common).autoconnect()
 
     func updateEndTime() {
         guard let cancelTime = cancelTime else { return }
@@ -126,12 +125,11 @@ struct TimerView: SwiftUI.View {
                         let currentTime = dateFormatter.string(from: Date())
                         let alarmTime = dateFormatter.string(from: wakeUpTime)
                         // Проверка, соответствует ли текущее время времени срабатывания будильника
-                        
+
                         if currentTime == alarmTime && isStarted {
                             // Проверка, не звучит ли уже будильник и является ли это firstalarm или secondalarm
                             if !isPlayed.isPlaying && (isPlayed.index == 0 || isPlayed.index == 1) {
                                 showImage = true
-                                isAlarmPlaying = true
                                 audioPlayer.playOrPause()
                                 isPlayed.isPlaying = true
                             }
@@ -140,7 +138,6 @@ struct TimerView: SwiftUI.View {
                             audioPlayer.playOrPause()
                             isPlayed.isPlaying = false
                             showImage = false
-                            isAlarmPlaying = false
                         }
                     }
                 
@@ -196,18 +193,16 @@ struct TimerView: SwiftUI.View {
                         .cornerRadius(50)
                 }
                 
-                if isAlarmPlaying {
-                    Button(action: {
-                        snoozeAlarm()
-                    }) {
-                        Text("Повтор")
-                            .font(.system(size: 20))
-                            .fontWeight(.bold)
-                            .foregroundColor(.white)
-                            .padding(EdgeInsets(top: 15, leading: 50, bottom: 15, trailing: 50))
-                            .background(Color.orange)
-                            .cornerRadius(50)
-                    }
+                Button(action: {
+                    snoozeAlarm()
+                }) {
+                    Text("Повтор")
+                        .font(.system(size: 20))
+                        .fontWeight(.bold)
+                        .foregroundColor(.white)
+                        .padding(EdgeInsets(top: 15, leading: 50, bottom: 15, trailing: 50))
+                        .background(Color.orange)
+                        .cornerRadius(50)
                 }
             }
         }
