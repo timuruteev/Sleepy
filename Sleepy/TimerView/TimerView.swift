@@ -8,10 +8,10 @@ struct TimerView: SwiftUI.View {
     @SwiftUI.Binding var wakeUpTime: Date
     @State private var cancelTime: Date?
     @State private var showImage = false
-    @State private var showSnoozeButton = false
     @Environment(\.presentationMode) var presentationMode
     @ObservedObject var audioPlayer: AudioPlayer
     
+    @State private var isAlarmPlaying = false
     @State private var isStarted = true
     @State private var audioRecorder: AVAudioRecorder!
     @State private var isRecording = false
@@ -81,38 +81,12 @@ struct TimerView: SwiftUI.View {
         // Остановка текущей мелодии будильника
         audioPlayer.playOrPause()
         showImage = false
-        showSnoozeButton = false
         
-        // Получаем время повтора из базы данных
-        let snoozeDuration = fetchSnoozeDuration() ?? 60 // Значение по умолчанию - 1 минута
-        
-        // Установка нового будильника с учетом времени повтора
-        wakeUpTime = Date().addingTimeInterval(TimeInterval(snoozeDuration * 60))
+        // Установка нового будильника через 10 минут
+        wakeUpTime = Date().addingTimeInterval(1 * 60)
         isStarted = true
     }
-
-    // Функция для получения времени повтора из таблицы SnoozePeriod
-    func fetchSnoozeDuration() -> Int? {
-        let fileManager = FileManager.default
-        let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
-        let databaseURL = documentsDirectory.appendingPathComponent("Sleepy1.db")
-        
-        // Подключаемся к базе данных
-        let db = try! Connection(databaseURL.path, readonly: false)
-        
-        // Определяем таблицу и выражения
-        let snoozePeriod = Table("SnoozePeriod")
-        let durationExpr = Expression<Int>("Duration")
-        
-        // Выбираем последнее добавленное значение времени повтора
-        if let lastSnoozePeriod = try? db.pluck(snoozePeriod.order(Expression<Int64>("IdSnoozePeriod").desc)) {
-            return lastSnoozePeriod[durationExpr]
-        } else {
-            print("Snooze duration could not be found in the database.")
-            return nil
-        }
-    }
-
+    
     var body: some SwiftUI.View {
         ZStack {
             let dateFormatter: DateFormatter = {
@@ -152,12 +126,12 @@ struct TimerView: SwiftUI.View {
                         let currentTime = dateFormatter.string(from: Date())
                         let alarmTime = dateFormatter.string(from: wakeUpTime)
                         // Проверка, соответствует ли текущее время времени срабатывания будильника
-
+                        
                         if currentTime == alarmTime && isStarted {
                             // Проверка, не звучит ли уже будильник и является ли это firstalarm или secondalarm
                             if !isPlayed.isPlaying && (isPlayed.index == 0 || isPlayed.index == 1) {
                                 showImage = true
-                                showSnoozeButton = true
+                                isAlarmPlaying = true
                                 audioPlayer.playOrPause()
                                 isPlayed.isPlaying = true
                             }
@@ -166,7 +140,7 @@ struct TimerView: SwiftUI.View {
                             audioPlayer.playOrPause()
                             isPlayed.isPlaying = false
                             showImage = false
-                            showSnoozeButton = false
+                            isAlarmPlaying = false
                         }
                     }
                 
@@ -222,7 +196,7 @@ struct TimerView: SwiftUI.View {
                         .cornerRadius(50)
                 }
                 
-                if showSnoozeButton {
+                if isAlarmPlaying {
                     Button(action: {
                         snoozeAlarm()
                     }) {
@@ -256,7 +230,6 @@ struct TimerView: SwiftUI.View {
         let db = try! Connection(finalDatabaseURL.path, readonly: false)
         
         let audioRecord = Table("AudioRecord")
-        
         let idAlarmExpr = Expression<Int64>("IdAlarm")
         let soundPathExpr = Expression<String>("SoundPath")
         
