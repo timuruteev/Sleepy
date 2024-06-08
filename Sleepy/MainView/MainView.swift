@@ -30,53 +30,43 @@ class isPlayed{
 }
 
 class AudioPlayer: NSObject, ObservableObject {
-    // Свойство, которое хранит экземпляр AVAudioPlayer
     private var audioPlayer: AVAudioPlayer?
     
-    // Инициализатор, который теперь будет загружать звук из базы данных
     override init() {
         super.init()
         loadLatestSound()
     }
     
-    // Метод для загрузки последнего звука будильника
     func loadLatestSound() {
         let fileManager = FileManager.default
         let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
         let databaseURL = documentsDirectory.appendingPathComponent("Sleepy1.db")
         
-        // Подключаемся к базе данных
         let db = try! Connection(databaseURL.path, readonly: false)
         
-        // Определяем таблицу и выражения
         let alarmSound = Table("AlarmSound")
         let soundPathExpr = Expression<String>("SoundPath")
         
-        // Выбираем последний добавленный звук будильника
         if let lastAlarmSound = try? db.pluck(alarmSound.order(Expression<Int64>("IdAlarmSound").desc)) {
             let soundPath = lastAlarmSound[soundPathExpr]
             
-            // Удаляем начальный слеш из пути, если он есть
             let trimmedSoundPath = soundPath.hasPrefix("/") ? String(soundPath.dropFirst()) : soundPath
             
-            // Формируем полный путь к файлу звука, учитывая папку Sounds
             let soundFilePath = documentsDirectory
                 .appendingPathComponent("Sounds", isDirectory: true)
                 .appendingPathComponent(trimmedSoundPath).path
             
-            // Проверяем, существует ли файл по этому пути
             if fileManager.fileExists(atPath: soundFilePath) {
-                // Пытаемся загрузить файл звука
                 do {
                     self.audioPlayer = try AVAudioPlayer(contentsOf: URL(fileURLWithPath: soundFilePath))
                 } catch {
-                    print("AVAudioPlayer could not be instantiated: \(error)")
+                    print("AVAudioPlayer не может быть инициализирован: \(error)")
                 }
             } else {
-                print("Audio file does not exist at the path: \(soundFilePath)")
+                print("Аудиофайл не находится по пути: \(soundFilePath)")
             }
         } else {
-            print("Audio file could not be found in the database.")
+            print("Аудиофайл не найден в Базе данных.")
         }
     }
     
@@ -84,19 +74,17 @@ class AudioPlayer: NSObject, ObservableObject {
         loadLatestSound()
     }
     
-    // Метод, который воспроизводит или приостанавливает звук
     func playOrPause() {
         
         updateSound()
         
         guard let player = audioPlayer else { return }
 
-            // Изменим логику метода playOrPause
             if isPlayed.isPlaying {
               player.stop()
             player.currentTime = 0
                 isPlayed.isPlaying = false            } else {
-                    player.currentTime = 0 // Сбросим время воспроизведения
+                    player.currentTime = 0
                             player.prepareToPlay()
               player.play()
                     isPlayed.isPlaying = true
@@ -107,14 +95,11 @@ class AudioPlayer: NSObject, ObservableObject {
 
 extension AudioPlayer: AVAudioPlayerDelegate {
     func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
-        // Выводим сообщение в консоль, если воспроизведение завершилось успешно
         if flag {
-            print("Sound finished playing successfully")
+            print("Звук успешно проиграл")
         }
     }
 }
-
-
 
 struct FirstAlarm: SwiftUI.View {
     @State private var wakeUpTime = Date()
@@ -123,15 +108,11 @@ struct FirstAlarm: SwiftUI.View {
     @State private var isPresented = false
     @State private var sleepDuration: TimeInterval = 0
 
-    // Создаем экземпляр AudioPlayer с именем файла звука
     @StateObject private var audioPlayer = AudioPlayer()
     
-    // Создаем таймер, который будет запускаться каждую секунду
     let timer = Timer.publish(every: 0.001, on: .main, in: .common).autoconnect()
-    // Создаем переменную состояния, которая будет хранить, была ли нажата кнопка старт
     @State private var isStarted = false
     
-    // Создайте DateFormatter
     let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.timeStyle = .short
@@ -143,36 +124,26 @@ struct FirstAlarm: SwiftUI.View {
         let currentTime = Date()
         let eightHours: TimeInterval = 8 * 60 * 60
 
-        // Рассчитываем интервал времени до wakeUpTime
         var wakeUpComponents = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: wakeUpTime)
         var currentComponents = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: currentTime)
 
-        // Установим дату wakeUpComponents на текущую дату, чтобы избежать проблемы перехода через полночь
         wakeUpComponents.year = currentComponents.year
         wakeUpComponents.month = currentComponents.month
         wakeUpComponents.day = currentComponents.day
 
-        // Если выбранное время уже прошло, установим его на следующий день
         if wakeUpTime < currentTime {
             wakeUpComponents.day! += 1
         }
 
-        // Пересчитаем wakeUpTime с учетом текущей даты
         guard let adjustedWakeUpTime = calendar.date(from: wakeUpComponents) else { return }
 
-        // Рассчитываем интервал времени до wakeUpTime
         let sleepDuration = adjustedWakeUpTime.timeIntervalSince(currentTime)
 
         if sleepDuration < 60 * 60 {
-            // Если до времени пробуждения осталось менее 60 минут, будильник звучит в выбранное время
-            // Нет необходимости изменять wakeUpTime
         } else {
-            // Если до времени пробуждения осталось более 60 минут
             if sleepDuration <= eightHours {
-                // Если сон менее 8 часов, будильник будит пользователя позже на 30 минут
                 wakeUpTime = calendar.date(byAdding: .minute, value: 30, to: adjustedWakeUpTime)!
             } else {
-                // Если сон более 8 часов, будильник будит раньше на 30 минут
                 wakeUpTime = calendar.date(byAdding: .minute, value: -30, to: adjustedWakeUpTime)!
             }
         }
@@ -180,8 +151,8 @@ struct FirstAlarm: SwiftUI.View {
 
     func scheduleAlarmNotification(wakeUpTime: Date) {
         let content = UNMutableNotificationContent()
-        content.title = "Будильник"
-        content.body = "Пора просыпаться! Время: \(wakeUpTime.formatted(.dateTime.hour().minute()))"
+        content.title = "Пора просыпаться!"
+        content.body = "Время: \(wakeUpTime.formatted(.dateTime.hour().minute()))"
         content.sound = UNNotificationSound.default
 
         let triggerDate = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: wakeUpTime)
@@ -337,15 +308,11 @@ struct SecondAlarm: SwiftUI.View {
     @State private var alarmIndex = 0
     @State private var isPresented = false
     
-    // Создаем экземпляр AudioPlayer с именем файла звука
     @StateObject private var audioPlayer = AudioPlayer()
     
-    // Создаем таймер, который будет запускаться каждую секунду
     let timer = Timer.publish(every: 0.00001, on: .main, in: .common).autoconnect()
-    // Создаем переменную состояния, которая будет хранить, была ли нажата кнопка старт
     @State private var isStarted = false
     
-    // Создайте DateFormatter
     let secondAlarmDateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.timeStyle = .short

@@ -71,18 +71,14 @@ struct TimerView: SwiftUI.View {
     }
     
     func resetWakeUpTime() {
-        // Сброс wakeUpTime и других связанных состояний
-        wakeUpTime = Date() // Установите это на текущее время или на исходное значение, которое вы используете при инициализации
+        wakeUpTime = Date()
         isStarted = false
-        // Добавьте сюда любые другие состояния, которые нужно сбросить
     }
     
     func snoozeAlarm() {
-        // Остановка текущей мелодии будильника
         audioPlayer.playOrPause()
         showImage = false
         
-        // Установка нового будильника через 10 минут
         wakeUpTime = Date().addingTimeInterval(1 * 60)
         isStarted = true
     }
@@ -100,7 +96,6 @@ struct TimerView: SwiftUI.View {
             VStack {
                 
                 if showImage {
-                    // Используйте Image(uiImage:) для загрузки GIF напрямую
                     if let image = UIImage(named: "Clock") {
                         Image(uiImage: image)
                             .resizable()
@@ -120,7 +115,6 @@ struct TimerView: SwiftUI.View {
                     .foregroundColor(.white)
                     .padding()
                     .onAppear {
-                        // Установка формата даты для wakeUpTime
                         let formatter = DateFormatter()
                         formatter.dateFormat = "HH:mm"
                         let dateString = formatter.string(from: wakeUpTime)
@@ -131,10 +125,8 @@ struct TimerView: SwiftUI.View {
                     .onReceive(timer) { _ in
                         let currentTime = dateFormatter.string(from: Date())
                         let alarmTime = dateFormatter.string(from: wakeUpTime)
-                        // Проверка, соответствует ли текущее время времени срабатывания будильника
                         
                         if currentTime == alarmTime && isStarted {
-                            // Проверка, не звучит ли уже будильник и является ли это firstalarm или secondalarm
                             if !isPlayed.isPlaying && (isPlayed.index == 0 || isPlayed.index == 1) {
                                 showImage = true
                                 isAlarmPlaying = true
@@ -142,7 +134,6 @@ struct TimerView: SwiftUI.View {
                                 isPlayed.isPlaying = true
                             }
                         } else if isPlayed.isPlaying && isPlayed.index == 2 {
-                            // Если была нажата кнопка отмены
                             audioPlayer.playOrPause()
                             isPlayed.isPlaying = false
                             showImage = false
@@ -174,8 +165,7 @@ struct TimerView: SwiftUI.View {
                         try audioSession.setCategory(.playback)
                         try audioSession.setActive(true)
                     } catch {
-                        // Обработайте возможные ошибки
-                        print("Failed to activate audio session: \(error)")
+                        print("Ошибка активации аудио: \(error)")
                     }
                 }
                 
@@ -188,11 +178,11 @@ struct TimerView: SwiftUI.View {
                         startRecording()
                     }
                 }) {
-                    Text(isRecording ? "Остановить" : "Записать")
+                    Text(isRecording ? "Остановить" : "Запись")
                         .font(.system(size: 20))
                         .fontWeight(.bold)
                         .foregroundColor(.white)
-                        .padding(EdgeInsets(top: 15, leading: 45, bottom: 15, trailing: 50))
+                        .padding(EdgeInsets(top: 15, leading: 50, bottom: 15, trailing: 50))
                         .background(Color.blue)
                         .cornerRadius(50)
                 }
@@ -239,7 +229,7 @@ struct TimerView: SwiftUI.View {
                                         soundPathExpr <- relativePath)
         try! db.run(insert)
         
-        print("Saved audio record with path: \(audioFileURL.path)")
+        print("Аудио сохранено по пути: \(audioFileURL.path)")
     }
     
     func startRecording() {
@@ -267,8 +257,7 @@ struct TimerView: SwiftUI.View {
             
             isRecording = true
         } catch {
-            // Обработайте возможные ошибки
-            print("Failed to start recording: \(error)")
+            print("Ошибка начала записи: \(error)")
         }
     }
     
@@ -278,8 +267,7 @@ struct TimerView: SwiftUI.View {
         do {
             try audioSession.setActive(false)
         } catch {
-            // Обработайте возможные ошибки
-            print("Failed to deactivate audio session: \(error)")
+            print("Ошибка остановки записи: \(error)")
         }
         
         isRecording = false
@@ -314,6 +302,6 @@ struct TimerView: SwiftUI.View {
 
 struct TimerView_Previews: PreviewProvider {
     static var previews: some SwiftUI.View {
-        TimerView(wakeUpTime: .constant(Date()), audioPlayer: AudioPlayer(), alarmIndex: 0) // Укажите значение для alarmIndex
+        TimerView(wakeUpTime: .constant(Date()), audioPlayer: AudioPlayer(), alarmIndex: 0)
     }
 }
