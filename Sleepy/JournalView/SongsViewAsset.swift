@@ -11,6 +11,7 @@ struct SongsViewAsset: SwiftUI.View {
     @State private var audioDuration: String = ""
     @State private var audioTitle: String = ""
     @State private var errorMessage: String?
+    @State private var isShowingShareSheet = false
     
     var body: some SwiftUI.View {
         VStack {
@@ -34,7 +35,7 @@ struct SongsViewAsset: SwiftUI.View {
                     }) {
                         Image(systemName: isPlaying ? "pause.circle" : "play.circle")
                             .resizable()
-                            .frame(width: 32, height: 32) // Уменьшите размер кнопки
+                            .frame(width: 32, height: 32)
                     }
                     .padding()
                     .alignmentGuide(.leading) { _ in 0 }
@@ -47,9 +48,29 @@ struct SongsViewAsset: SwiftUI.View {
                         Text("Длительность: \(audioDuration)")
                             .font(.subheadline)
                     }
-                }
+                    .padding(.trailing, 10)
+                    
+                    VStack {
+                                            Spacer()
+                                            Button(action: {
+                                                isShowingShareSheet = true
+                                            }) {
+                                                Image(systemName: "square.and.arrow.up")
+                                                    .resizable()
+                                                    .frame(width: 28, height: 36)
+                                            }
+                                            Spacer()
+                                        }
+                                        .frame(height: 44) // Устанавливаем высоту, чтобы выровнять по центру
+                                        .padding(.trailing)
+                                    }
+                                }
+                            }
+        .sheet(isPresented: $isShowingShareSheet, content: {
+            if let audioFileURL = audioFileURL {
+                ShareSheet(activityItems: [audioFileURL])
             }
-        }
+        })
         .onAppear() {
             loadAudioFileFromDatabase()
         }
@@ -85,10 +106,11 @@ struct SongsViewAsset: SwiftUI.View {
             
             if FileManager.default.fileExists(atPath: fullPath) {
                 do {
-                    audioPlayer = try AVAudioPlayer(contentsOf: URL(fileURLWithPath: fullPath))
+                    audioFileURL = URL(fileURLWithPath: fullPath)
+                    audioPlayer = try AVAudioPlayer(contentsOf: audioFileURL!)
                     audioDuration = formatTime(audioPlayer?.duration ?? 0)
                     
-                    if let creationDate = getFileCreationDate(URL(fileURLWithPath: fullPath)) {
+                    if let creationDate = getFileCreationDate(audioFileURL!) {
                         audioTitle = formatDate(creationDate)
                     } else {
                         audioTitle = "Дата создания файла неизвестна"
@@ -147,6 +169,18 @@ struct SongsViewAsset: SwiftUI.View {
         formatter.locale = Locale(identifier: "ru_RU")
         return formatter.string(from: date)
     }
+}
+
+struct ShareSheet: UIViewControllerRepresentable {
+    var activityItems: [Any]
+    var applicationActivities: [UIActivity]? = nil
+    
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        let controller = UIActivityViewController(activityItems: activityItems, applicationActivities: applicationActivities)
+        return controller
+    }
+    
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
 
 struct SongsViewAsset_Previews: PreviewProvider {
