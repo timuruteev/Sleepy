@@ -28,7 +28,9 @@ struct SongsViewAsset: SwiftUI.View {
             } else {
                 HStack {
                     Button(action: {
-                        playOrPause()
+                        withAnimation(.easeInOut(duration: 0.1)) {
+                            playOrPause()
+                        }
                     }) {
                         Image(systemName: isPlaying ? "pause.circle" : "play.circle")
                             .resizable()
