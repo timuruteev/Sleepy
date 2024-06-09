@@ -13,6 +13,7 @@ struct TimerView: SwiftUI.View {
     @ObservedObject var audioPlayer: AudioPlayer
     
     @State private var isStarted = true
+    @State private var isSnoozeButtonVisible = true // добавляем состояние для видимости кнопки "Повтор"
     @State private var audioRecorder: AVAudioRecorder!
     @State private var isRecording = false
     @State private var audioFileURL: URL?
@@ -80,7 +81,29 @@ struct TimerView: SwiftUI.View {
         showImage = false
         
         wakeUpTime = Date().addingTimeInterval(1 * 60)
+        scheduleAlarmNotification(wakeUpTime: wakeUpTime)
         isStarted = true
+        isSnoozeButtonVisible = false // скрываем кнопку "Повтор" после нажатия
+    }
+    
+    func scheduleAlarmNotification(wakeUpTime: Date) {
+        let content = UNMutableNotificationContent()
+        content.title = "Пора просыпаться!"
+        content.body = "Время: \(wakeUpTime.formatted(.dateTime.hour().minute()))"
+        content.sound = UNNotificationSound.default
+
+        let triggerDate = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: wakeUpTime)
+        let trigger = UNCalendarNotificationTrigger(dateMatching: triggerDate, repeats: false)
+
+        let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: trigger)
+
+        UNUserNotificationCenter.current().add(request) { error in
+            if let error = error {
+                print("Ошибка при добавлении уведомления: \(error)")
+            } else {
+                print("Уведомление успешно запланировано на \(wakeUpTime)")
+            }
+        }
     }
     
     var body: some SwiftUI.View {
@@ -132,6 +155,8 @@ struct TimerView: SwiftUI.View {
                                 isAlarmPlaying = true
                                 audioPlayer.playOrPause()
                                 isPlayed.isPlaying = true
+                                isSnoozeButtonVisible = true // показываем кнопку "Повтор" для нового будильника
+                                scheduleAlarmNotification(wakeUpTime: wakeUpTime) // запланировать уведомление для повтора
                             }
                         } else if isPlayed.isPlaying && isPlayed.index == 2 {
                             audioPlayer.playOrPause()
@@ -187,7 +212,7 @@ struct TimerView: SwiftUI.View {
                         .cornerRadius(50)
                 }
                 
-                if isAlarmPlaying {
+                if isAlarmPlaying && isSnoozeButtonVisible {
                     Spacer().frame(height: 200)
                     Button(action: {
                         snoozeAlarm()
