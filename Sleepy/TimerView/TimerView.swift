@@ -296,6 +296,13 @@ struct TimerView: SwiftUI.View {
             print("Не удалось получить IdAlarm из таблицы Statistic")
         }
         
+        do {
+            try audioSession.setCategory(.playback)
+            try audioSession.setActive(true)
+        } catch {
+            print("Ошибка активации аудио: \(error)")
+        }
+        
         print("Saved audio file at \(audioFileURL!)")
     }
 }

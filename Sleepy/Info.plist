@@ -12,5 +12,7 @@
     <string>Мы используем ваши данные о здоровье для отображения статистики сна.</string>
     <key>NSHealthUpdateUsageDescription</key>
     <string>Мы обновляем ваши данные о здоровье для улучшения статистики сна.</string>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>Мы используем ваш микрофон для записи звуков будильника.</string>
 </dict>
 </plist>

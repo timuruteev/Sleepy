@@ -15,12 +15,12 @@ struct SongsViewAsset: SwiftUI.View {
     var body: some SwiftUI.View {
         VStack {
             Text("Записанные звуки")
-                            .font(.title)
-                            .fontWeight(.bold)
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.leading, 10)
-                            .padding(.bottom)
+                .font(.title)
+                .fontWeight(.bold)
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.leading, 10)
+                .padding(.bottom)
             
             if let errorMessage = errorMessage {
                 Text(errorMessage)
@@ -52,11 +52,11 @@ struct SongsViewAsset: SwiftUI.View {
             loadAudioFileFromDatabase()
         }
         .onChange(of: selectedDate) { newDate in
-                    loadAudioFileFromDatabase()
-                }
-            }
+            loadAudioFileFromDatabase()
+        }
+    }
     
-        func loadAudioFileFromDatabase() {
+    func loadAudioFileFromDatabase() {
         let fileManager = FileManager.default
         let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
         let databaseURL = documentsDirectory.appendingPathComponent("Sleepy1.db")
@@ -87,10 +87,10 @@ struct SongsViewAsset: SwiftUI.View {
                     audioDuration = formatTime(audioPlayer?.duration ?? 0)
                     
                     if let creationDate = getFileCreationDate(URL(fileURLWithPath: fullPath)) {
-                                        audioTitle = (formatDate(creationDate))
-                                    } else {
-                                        audioTitle = "Дата создания файла неизвестна"
-                                    }
+                        audioTitle = formatDate(creationDate)
+                    } else {
+                        audioTitle = "Дата создания файла неизвестна"
+                    }
                     
                     audioPlayer?.prepareToPlay()
                     self.errorMessage = nil
@@ -111,6 +111,13 @@ struct SongsViewAsset: SwiftUI.View {
             player.pause()
             isPlaying = false
         } else {
+            let audioSession = AVAudioSession.sharedInstance()
+            do {
+                try audioSession.setCategory(.playback)
+                try audioSession.setActive(true)
+            } catch {
+                print("Ошибка активации аудио: \(error)")
+            }
             player.play()
             isPlaying = true
         }
