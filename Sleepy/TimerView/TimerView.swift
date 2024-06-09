@@ -106,6 +106,10 @@ struct TimerView: SwiftUI.View {
         }
     }
     
+    func cancelAllNotifications() {
+        UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
+    }
+    
     var body: some SwiftUI.View {
         ZStack {
             let dateFormatter: DateFormatter = {
@@ -175,6 +179,7 @@ struct TimerView: SwiftUI.View {
                     resetWakeUpTime()
                     presentationMode.wrappedValue.dismiss()
                     updateEndTime()
+                    cancelAllNotifications() // Отменяем все запланированные уведомления
                 }) {
                     Text("Отмена")
                         .font(.system(size: 20))

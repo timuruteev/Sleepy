@@ -1,8 +1,12 @@
 import SwiftUI
+import AVFoundation
 import SQLite
 
-struct SongViewAsset: SwiftUI.View  {
+struct SongViewAsset: SwiftUI.View {
     @State private var selectedSong: String
+    @State private var audioPlayer: AVAudioPlayer?
+    @State private var isPlaying = false
+    @State private var currentPlayingSong: String?
     let songs = ["Alerta", "Sirenize", "Clockwise", "Chimy", "Kevat"]
     @Environment(\.presentationMode) var presentationMode
 
@@ -46,22 +50,57 @@ struct SongViewAsset: SwiftUI.View  {
         try! db.run(insert)
     }
 
-    var body: some SwiftUI.View  {
+    func playOrPauseSound(song: String) {
+        if isPlaying && currentPlayingSong == song {
+            audioPlayer?.pause()
+            isPlaying = false
+        } else {
+            let fileManager = FileManager.default
+            let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
+            let soundFilePath = documentsDirectory.appendingPathComponent("Sounds/\(song).mp3").path
+            
+            if fileManager.fileExists(atPath: soundFilePath) {
+                do {
+                    audioPlayer = try AVAudioPlayer(contentsOf: URL(fileURLWithPath: soundFilePath))
+                    audioPlayer?.play()
+                    isPlaying = true
+                    currentPlayingSong = song
+                } catch {
+                    print("Ошибка при попытке воспроизвести звук: \(error)")
+                }
+            } else {
+                print("Аудиофайл не найден по пути: \(soundFilePath)")
+            }
+        }
+    }
+
+    var body: some SwiftUI.View {
         NavigationView {
             List {
                 ForEach(songs, id: \.self) { song in
-                    Button(action: {
-                        selectedSong = song
-                        updateAlarmSound(selectedSong: song)
-                    }) {
-                        HStack {
-                            Image(systemName: selectedSong == song ? "largecircle.fill.circle" : "circle")
+                    HStack {
+                        Button(action: {
+                            selectedSong = song
+                            updateAlarmSound(selectedSong: song)
+                        }) {
+                            HStack {
+                                Image(systemName: selectedSong == song ? "largecircle.fill.circle" : "circle")
+                                    .foregroundColor(.blue)
+                                Text(song)
+                                    .font(.headline)
+                            }
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                        
+                        Spacer()
+                        
+                        Button(action: {
+                            playOrPauseSound(song: song)
+                        }) {
+                            Image(systemName: isPlaying && currentPlayingSong == song ? "pause.circle" : "play.circle")
                                 .foregroundColor(.blue)
-                            Text(song)
-                                .font(.headline)
                         }
                     }
-                    .buttonStyle(PlainButtonStyle())
                 }
             }
             .navigationBarItems(leading: Button(action: {
@@ -83,7 +122,7 @@ struct SongViewAsset: SwiftUI.View  {
 }
 
 struct SongViewAsset_Previews: PreviewProvider {
-    static var previews: some SwiftUI.View  {
+    static var previews: some SwiftUI.View {
         SongViewAsset()
     }
 }
