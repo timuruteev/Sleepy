@@ -12,6 +12,7 @@ struct SongsViewAsset: SwiftUI.View {
     @State private var audioTitle: String = ""
     @State private var errorMessage: String?
     @State private var isShowingShareSheet = false
+    @State private var isShowingDeleteAlert = false
     
     var body: some SwiftUI.View {
         VStack {
@@ -27,50 +28,80 @@ struct SongsViewAsset: SwiftUI.View {
                 Text(errorMessage)
                     .foregroundColor(.red)
             } else {
-                HStack {
-                    Button(action: {
-                        withAnimation(.easeInOut(duration: 0.1)) {
-                            playOrPause()
-                        }
-                    }) {
-                        Image(systemName: isPlaying ? "pause.circle" : "play.circle")
-                            .resizable()
-                            .frame(width: 32, height: 32)
-                    }
-                    .padding()
-                    .alignmentGuide(.leading) { _ in 0 }
-                    
-                    Spacer()
-                    
-                    VStack(alignment: .trailing) {
-                        Text("Записано: \(audioTitle)")
-                            .font(.subheadline)
-                        Text("Длительность: \(audioDuration)")
-                            .font(.subheadline)
-                    }
-                    .padding(.trailing, 10)
-                    
-                    VStack {
-                                            Spacer()
-                                            Button(action: {
-                                                isShowingShareSheet = true
-                                            }) {
-                                                Image(systemName: "square.and.arrow.up")
-                                                    .resizable()
-                                                    .frame(width: 28, height: 36)
-                                            }
-                                            Spacer()
-                                        }
-                                        .frame(height: 44) // Устанавливаем высоту, чтобы выровнять по центру
-                                        .padding(.trailing)
-                                    }
-                                }
+                if audioFileURL != nil {
+                    HStack {
+                        Button(action: {
+                            withAnimation(.easeInOut(duration: 0.1)) {
+                                playOrPause()
                             }
+                        }) {
+                            Image(systemName: isPlaying ? "pause.circle" : "play.circle")
+                                .resizable()
+                                .frame(width: 32, height: 32)
+                        }
+                        .padding()
+                        .alignmentGuide(.leading) { _ in 0 }
+                        
+                        Spacer()
+                        
+                        VStack(alignment: .trailing) {
+                            Text("Записано: \(audioTitle)")
+                                .font(.subheadline)
+                            Text("Длительность: \(audioDuration)")
+                                .font(.subheadline)
+                        }
+                        .padding(.trailing, 10)
+                        
+                        VStack {
+                            Spacer()
+                            Button(action: {
+                                isShowingShareSheet = true
+                            }) {
+                                Image(systemName: "square.and.arrow.up")
+                                    .resizable()
+                                    .frame(width: 28, height: 36)
+                            }
+                            Spacer()
+                        }
+                        .frame(height: 44)
+                        .padding(.trailing)
+                        
+                        VStack {
+                            Spacer()
+                            Button(action: {
+                                isShowingDeleteAlert = true
+                            }) {
+                                Image(systemName: "trash")
+                                    .resizable()
+                                    .frame(width: 28, height: 36)
+                            }
+                            Spacer()
+                        }
+                        .frame(height: 44)
+                        .padding(.trailing)
+                    }
+                } else {
+                    Text("Нет записанных звуков")
+                        .foregroundColor(.gray)
+                        .padding()
+                }
+            }
+        }
         .sheet(isPresented: $isShowingShareSheet, content: {
             if let audioFileURL = audioFileURL {
                 ShareSheet(activityItems: [audioFileURL])
             }
         })
+        .alert(isPresented: $isShowingDeleteAlert) {
+            Alert(
+                title: Text("Удалить запись"),
+                message: Text("Вы уверены, что хотите удалить эту запись?"),
+                primaryButton: .destructive(Text("Удалить")) {
+                    deleteAudioFile()
+                },
+                secondaryButton: .cancel()
+            )
+        }
         .onAppear() {
             loadAudioFileFromDatabase()
         }
@@ -126,6 +157,8 @@ struct SongsViewAsset: SwiftUI.View {
             }
         } else {
             self.errorMessage = "Аудиозапись не найдена для выбранной даты"
+            audioFileURL = nil
+            audioPlayer = nil
         }
     }
 
@@ -144,6 +177,35 @@ struct SongsViewAsset: SwiftUI.View {
             }
             player.play()
             isPlaying = true
+        }
+    }
+    
+    func deleteAudioFile() {
+        guard let audioFileURL = audioFileURL else { return }
+        let fileManager = FileManager.default
+        
+        do {
+            try fileManager.removeItem(at: audioFileURL)
+            
+            let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
+            let databaseURL = documentsDirectory.appendingPathComponent("Sleepy1.db")
+            
+            let db = try Connection(databaseURL.path, readonly: false)
+            let audioRecord = Table("AudioRecord")
+            let soundPathExpr = Expression<String>("SoundPath")
+            
+            let relativePath = audioFileURL.path.replacingOccurrences(of: documentsDirectory.path, with: "")
+            let query = audioRecord.filter(soundPathExpr == relativePath)
+            
+            try db.run(query.delete())
+            
+            self.audioFileURL = nil
+            self.audioPlayer = nil
+            self.audioDuration = ""
+            self.audioTitle = ""
+            self.errorMessage = nil
+        } catch {
+            self.errorMessage = "Ошибка при удалении записанного звука"
         }
     }
     

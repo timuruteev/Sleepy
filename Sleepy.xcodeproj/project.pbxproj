@@ -732,7 +732,9 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Sleepy/Info.plist;
-				INFOPLIST_KEY_NSHealthShareUsageDescription = "Это приложение использует ваши данные о сне для отображения статистики сна.";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "Мы используем ваши данные о здоровье для отображения статистики сна.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Мы обновляем ваши данные о здоровье для улучшения статистики сна.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Мы используем ваш микрофон для записи звуков будильника.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -764,7 +766,9 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Sleepy/Info.plist;
-				INFOPLIST_KEY_NSHealthShareUsageDescription = "Это приложение использует ваши данные о сне для отображения статистики сна.";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "Мы используем ваши данные о здоровье для отображения статистики сна.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Мы обновляем ваши данные о здоровье для улучшения статистики сна.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Мы используем ваш микрофон для записи звуков будильника.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
