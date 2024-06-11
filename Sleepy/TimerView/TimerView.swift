@@ -19,7 +19,8 @@ struct TimerView: SwiftUI.View {
     @State private var audioFileURL: URL?
     @State var alarmIndex: Int
     
-    let timer = Timer.publish(every: 0.00001, on: .main, in: .common).autoconnect()
+    let timer = Timer.publish(every: 0.0001, on: .main, in: .common).autoconnect()
+    let notificationCenter = NotificationCenter.default
 
     func updateEndTime() {
         guard let cancelTime = cancelTime else { return }
@@ -148,6 +149,9 @@ struct TimerView: SwiftUI.View {
                         DispatchQueue.main.async {
                             self.wakeUpTime = formatter.date(from: dateString) ?? Date()
                         }
+                        notificationCenter.addObserver(forName: UIApplication.didBecomeActiveNotification, object: nil, queue: .main) { _ in
+                            updateViewOnReturn()
+                        }
                     }
                     .onReceive(timer) { _ in
                         let currentTime = dateFormatter.string(from: Date())
@@ -232,6 +236,14 @@ struct TimerView: SwiftUI.View {
                     }
                 }
             }
+        }
+    }
+    
+    func updateViewOnReturn() {
+        if isStarted && !isPlayed.isPlaying && (isPlayed.index == 0 || isPlayed.index == 1) {
+            showImage = true
+            isAlarmPlaying = true
+            isSnoozeButtonVisible = true
         }
     }
     

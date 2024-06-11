@@ -4,8 +4,7 @@ import SQLite
 
 struct MainView: SwiftUI.View {
     @State private var selectedTab = 0
-    @State private var selectedButton = "Сон"
-    
+
     var body: some SwiftUI.View {
         ZStack {
             TabView(selection: $selectedTab) {
@@ -20,11 +19,10 @@ struct MainView: SwiftUI.View {
                 Spacer()
             }
         }
-        
     }
 }
 
-class isPlayed{
+class isPlayed {
     static var isPlaying = false
     static var index = 0
 }
@@ -105,14 +103,11 @@ extension AudioPlayer: AVAudioPlayerDelegate {
 
 struct FirstAlarm: SwiftUI.View {
     @State private var wakeUpTime = Date()
-    @State private var selectedTab = "Сон"
-    @State private var alarmIndex = 0
     @State private var isPresented = false
-    @State private var sleepDuration: TimeInterval = 0
 
     @StateObject private var audioPlayer = AudioPlayer()
     
-    let timer = Timer.publish(every: 0.001, on: .main, in: .common).autoconnect()
+    let timer = Timer.publish(every: 0.0001, on: .main, in: .common).autoconnect()
     @State private var isStarted = false
     
     let dateFormatter: DateFormatter = {
@@ -286,7 +281,6 @@ struct FirstAlarm: SwiftUI.View {
                 .sheet(isPresented: $isPresented, content: {
                     TimerView(wakeUpTime: $wakeUpTime, audioPlayer: audioPlayer, alarmIndex: 0)
                 })
-
                 .padding(.horizontal)
                 Spacer()
             }
@@ -307,13 +301,11 @@ struct FirstAlarm: SwiftUI.View {
 
 struct SecondAlarm: SwiftUI.View {
     @State private var wakeUpTime = Date()
-    @State private var selectedTab = "Сон"
-    @State private var alarmIndex = 0
     @State private var isPresented = false
 
     @StateObject private var audioPlayer = AudioPlayer()
 
-    let timer = Timer.publish(every: 0.00001, on: .main, in: .common).autoconnect()
+    let timer = Timer.publish(every: 0.0001, on: .main, in: .common).autoconnect()
     @State private var isStarted = false
 
     let secondAlarmDateFormatter: DateFormatter = {
