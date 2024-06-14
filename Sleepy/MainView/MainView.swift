@@ -28,7 +28,7 @@ class isPlayed {
 }
 
 class AudioPlayer: NSObject, ObservableObject {
-    private var audioPlayer: AVAudioPlayer?
+    var audioPlayer: AVAudioPlayer?
 
     override init() {
         super.init()

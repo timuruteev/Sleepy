@@ -161,7 +161,7 @@ struct TimerView: SwiftUI.View {
                             if !isPlayed.isPlaying && (isPlayed.index == 0 || isPlayed.index == 1) {
                                 showImage = true
                                 isAlarmPlaying = true
-                                audioPlayer.playOrPause()
+                                playAlarmSound()
                                 isPlayed.isPlaying = true
                                 isSnoozeButtonVisible = true // показываем кнопку "Повтор" для нового будильника
                                 scheduleAlarmNotification(wakeUpTime: wakeUpTime) // запланировать уведомление для повтора
@@ -247,6 +247,15 @@ struct TimerView: SwiftUI.View {
         }
     }
     
+    func playAlarmSound() {
+        if let audioPlayer = audioPlayer.audioPlayer {
+            if !audioPlayer.isPlaying {
+                audioPlayer.currentTime = 0
+                audioPlayer.play()
+            }
+        }
+    }
+    
     func getRelativePathForAudioFile(_ audioFileURL: URL) -> String {
         let documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
         let relativePath = audioFileURL.path.replacingOccurrences(of: documentsURL.path, with: "")
@@ -277,7 +286,7 @@ struct TimerView: SwiftUI.View {
     func startRecording() {
         let audioSession = AVAudioSession.sharedInstance()
         do {
-            try audioSession.setCategory(.record)
+            try audioSession.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker, .allowBluetooth, .allowBluetoothA2DP])
             try audioSession.setActive(true)
             
             let documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
