@@ -1,8 +1,8 @@
 import SwiftUI
 import HealthKit
 
-struct ShortViewAsset: SwiftUI.View {
-    @SwiftUI.Binding var selectedDate: Date
+struct ShortViewAsset: View {
+    @Binding var selectedDate: Date
     @State private var startTime: String = "00:00"
     @State private var endTime: String = "00:00"
     private let healthStore = HKHealthStore()
