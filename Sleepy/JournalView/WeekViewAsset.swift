@@ -28,22 +28,25 @@ struct WeekViewAsset: View {
         Divider()
             .background(Color.gray)
     }
+
     func dateFor(index: Int) -> Date {
-            let calendar = Calendar.current
-            let today = calendar.startOfDay(for: Date())
-            return calendar.date(byAdding: .day, value: -index + 1, to: today)!
-        }
-    func isDateSelected(index: Int) -> Bool {
-            let calendar = Calendar.current
-            return calendar.isDate(self.selectedDate, inSameDayAs: self.dateFor(index: index))
-        }
-    func dayOfWeek(for date: Date) -> String {
-            let dateFormatter = DateFormatter()
-            dateFormatter.locale = Locale(identifier: "ru_RU")
-            dateFormatter.dateFormat = "EEEEE"
-            return dateFormatter.string(from: date)
-        }
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        return calendar.date(byAdding: .day, value: -index + 1, to: today)!
     }
+
+    func isDateSelected(index: Int) -> Bool {
+        let calendar = Calendar.current
+        return calendar.isDate(self.selectedDate, inSameDayAs: self.dateFor(index: index))
+    }
+
+    func dayOfWeek(for date: Date) -> String {
+        let dateFormatter = DateFormatter()
+        dateFormatter.locale = Locale(identifier: "ru_RU")
+        dateFormatter.dateFormat = "EEEEE"
+        return dateFormatter.string(from: date)
+    }
+}
 
 struct WeekViewAsset_Previews: PreviewProvider {
     static var previews: some View {

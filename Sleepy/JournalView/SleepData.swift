@@ -1,8 +1,6 @@
-//
-//  SleepData.swift
-//  Sleepy
-//
-//  Created by Timur on 15.06.2024.
-//
+import SwiftUI
 
-import Foundation
+class SleepData: ObservableObject {
+    @Published var startTime: String = "00:00"
+    @Published var endTime: String = "00:00"
+}
