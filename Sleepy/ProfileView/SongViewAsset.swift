@@ -12,6 +12,7 @@ struct SongViewAsset: SwiftUI.View {
 
     init() {
         _selectedSong = State(initialValue: SongViewAsset.fetchCurrentAlarmSound())
+        copySoundsFolderIfNeeded()  // Copy sounds folder if needed
     }
     
     static func fetchCurrentAlarmSound() -> String {
@@ -28,6 +29,32 @@ struct SongViewAsset: SwiftUI.View {
             return currentSound[soundName]
         } else {
             return "Clockwise"
+        }
+    }
+
+    func copySoundsFolderIfNeeded() {
+        let fileManager = FileManager.default
+        let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let finalSoundsDirectory = documentsDirectory.appendingPathComponent("Sounds")
+
+        if !fileManager.fileExists(atPath: finalSoundsDirectory.path) {
+            if let bundleSoundsURL = Bundle.main.url(forResource: "sounds", withExtension: nil) {
+                do {
+                    try fileManager.createDirectory(at: finalSoundsDirectory, withIntermediateDirectories: true, attributes: nil)
+                    let soundFiles = try fileManager.contentsOfDirectory(at: bundleSoundsURL, includingPropertiesForKeys: nil, options: [])
+                    for file in soundFiles {
+                        let destinationURL = finalSoundsDirectory.appendingPathComponent(file.lastPathComponent)
+                        try fileManager.copyItem(at: file, to: destinationURL)
+                    }
+                    print("Sounds directory copied to documents directory at path: \(finalSoundsDirectory.path)")
+                } catch {
+                    print("Error copying sounds directory: \(error)")
+                }
+            } else {
+                print("Sounds directory not found in bundle")
+            }
+        } else {
+            print("Sounds directory already exists at path: \(finalSoundsDirectory.path)")
         }
     }
 

@@ -14,6 +14,11 @@ struct SongsViewAsset: SwiftUI.View {
     @State private var isShowingShareSheet = false
     @State private var isShowingDeleteAlert = false
     
+    init(selectedDate: SwiftUI.Binding<Date>) {
+        self._selectedDate = selectedDate
+        copySoundsFolderIfNeeded()
+    }
+    
     var body: some SwiftUI.View {
         VStack {
             Text("Записанные звуки")
@@ -110,6 +115,34 @@ struct SongsViewAsset: SwiftUI.View {
         }
     }
     
+    func copySoundsFolderIfNeeded() {
+        let fileManager = FileManager.default
+        let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let finalSoundsDirectory = documentsDirectory.appendingPathComponent("sounds")
+
+        if !fileManager.fileExists(atPath: finalSoundsDirectory.path) {
+            guard let bundleSoundsURL = Bundle.main.url(forResource: "sounds", withExtension: nil) else {
+                print("Sounds directory not found in bundle")
+                return
+            }
+            do {
+                let soundFiles = try fileManager.contentsOfDirectory(at: bundleSoundsURL, includingPropertiesForKeys: nil, options: [])
+                try fileManager.createDirectory(at: finalSoundsDirectory, withIntermediateDirectories: true, attributes: nil)
+                
+                for file in soundFiles {
+                    let destinationURL = finalSoundsDirectory.appendingPathComponent(file.lastPathComponent)
+                    try fileManager.copyItem(at: file, to: destinationURL)
+                    print("Copied \(file.lastPathComponent) to \(destinationURL.path)")
+                }
+                print("Sounds directory copied to documents directory at path: \(finalSoundsDirectory.path)")
+            } catch {
+                print("Error copying sounds directory: \(error)")
+            }
+        } else {
+            print("Sounds directory already exists at path: \(finalSoundsDirectory.path)")
+        }
+    }
+
     func loadAudioFileFromDatabase() {
         let fileManager = FileManager.default
         let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!

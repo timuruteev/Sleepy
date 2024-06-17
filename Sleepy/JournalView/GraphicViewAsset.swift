@@ -1,297 +1,191 @@
 import SwiftUI
-import SQLite
+import HealthKit
 
-struct GraphicViewAsset: SwiftUI.View {
-    @SwiftUI.Binding var selectedDate: Date
-    @State private var startTime: String = ""
-    @State private var endTime: String = ""
-    @State private var sleepHours: String = ""
-    @State private var noDataMessage: String = ""
+struct GraphicViewAsset: View {
+    @Binding var selectedDate: Date
+    @State private var heartRates: [(time: Date, rate: Double)] = []
+    @State private var sleepIntervals: [Date] = []
+    @State private var noDataMessage: String = "Загрузка данных о пульсе..."
     @State private var isGraphVisible: Bool = false
     
-    var body: some SwiftUI.View {
-        VStack(alignment: .leading) 
-        {
+    let healthStore = HKHealthStore()
+    
+    var body: some View {
+        VStack(alignment: .leading) {
             ZStack {
+                if isGraphVisible && !heartRates.isEmpty {
+                    HStack(spacing: 2) {
+                        VStack(spacing: 2) {
+                            Text("Не сон")
+                                .font(.system(size: 14))
+                                .foregroundColor(.white)
+                            Spacer()
+                            Text("Сон")
+                                .font(.system(size: 14))
+                                .foregroundColor(.white)
+                        }
+                        .frame(height: 200)
+                        
+                        VStack {
+                            PulseGraph(heartRates: heartRates)
+                                .stroke(Color.blue, lineWidth: 2)
+                                .frame(height: 200)
+                                .padding(.horizontal, 5)
+                            
+                            HStack {
+                                ForEach(sleepIntervals, id: \.self) { interval in
+                                    VStack {
+                                        Text(DateFormatter.localizedString(from: interval, dateStyle: .none, timeStyle: .short))
+                                            .font(.system(size: 10))
+                                            .foregroundColor(.white)
+                                    }
+                                    .frame(minWidth: 0, maxWidth: .infinity)
+                                }
+                            }
+                            .padding(.horizontal, 5)
+                        }
+                    }
+                    .padding(.leading, 5)
+                }
                 
-                SleepGraph(startTime: startTime, endTime: endTime)
-                    .stroke(Color.blue, lineWidth: 2)
-                    .frame(height: 200)
-                    .padding(.horizontal, 20)
-                    .padding(.leading, 70)
-                
-                if sleepHours == "Сон длился меньше 30 минут" || noDataMessage != "" {
-                    Text(sleepHours.isEmpty ? noDataMessage : sleepHours)
+                if noDataMessage != "" {
+                    Text(noDataMessage)
                         .font(.title)
                         .foregroundColor(.white)
                         .font(.system(size: 18, weight: .bold))
                         .multilineTextAlignment(.center)
+                        .padding(.leading, 70)
                 }
-                
-            }
-            .overlay(
-                VStack(alignment: .leading, spacing: 30) {
-                    Spacer()
-                    if isGraphVisible && sleepHours != "Сон длился меньше 30 минут" {
-                        Text("Не сон") // Заменено с "Начало"
-                            .font(.system(size: 18, weight: .bold))
-                            .foregroundColor(.white)
-                            .padding(.leading, 10)
-                    }
-                    Spacer()
-                    if isGraphVisible && sleepHours != "Сон длился меньше 30 минут" {
-                        Text("Сон") // Заменено с "Гл. фаза"
-                            .font(.system(size: 18, weight: .bold))
-                            .foregroundColor(.white)
-                            .padding(.leading, 10)
-                            .offset(y: -30)
-                    }
-                    Spacer()
-                    if isGraphVisible && sleepHours != "Сон длился меньше 30 минут" {
-                        Text("Гл. фаза") // Заменено с "Конец"
-                            .font(.system(size: 18, weight: .bold))
-                            .foregroundColor(.white)
-                            .padding(.leading, 10)
-                            .offset(y: -50)
-                    }
-                    Spacer()
-                },
-                alignment: .leading
-            )
-            
-            
-            if sleepHours != "Сон длился меньше 30 минут" && noDataMessage.isEmpty {
-                HStack(spacing: 0) {
-                    ForEach(sleepHours.split(separator: " "), id: \.self) { hour in
-                        Text(String(hour))
-                            .foregroundColor(.white)
-                            .font(.system(size: 18, weight: .bold))
-                            .frame(minWidth: 0, maxWidth: .infinity)
-                    }
-                }
-                .multilineTextAlignment(.leading)
-                .padding(.horizontal, 20)
-                .padding(.leading, 70)
             }
         }
         .onAppear {
-            fetchSleepData(for: selectedDate)
+            requestAuthorization()
         }
         .onChange(of: selectedDate) { newDate in
-            self.startTime = ""
-            self.endTime = ""
-            self.sleepHours = ""
-            self.noDataMessage = ""
-            fetchSleepData(for: newDate)
+            fetchHeartRateData(for: newDate)
+            fetchSleepData(for: newDate) // Добавляем эту строку, чтобы обновлять данные о сне
         }
         .padding(.vertical, 10)
     }
     
+    func requestAuthorization() {
+        let heartRateType = HKQuantityType.quantityType(forIdentifier: .heartRate)!
+        let sleepType = HKCategoryType.categoryType(forIdentifier: .sleepAnalysis)!
+        let typesToShare: Set<HKSampleType> = []
+        let typesToRead: Set<HKObjectType> = [heartRateType, sleepType]
+        
+        healthStore.requestAuthorization(toShare: typesToShare, read: typesToRead) { success, error in
+            if success {
+                fetchHeartRateData(for: selectedDate)
+                fetchSleepData(for: selectedDate)
+            } else {
+                noDataMessage = "Не удалось получить разрешение на доступ к данным."
+            }
+        }
+    }
+    
+    func fetchHeartRateData(for selectedDate: Date) {
+        let heartRateType = HKQuantityType.quantityType(forIdentifier: .heartRate)!
+        let startDate = Calendar.current.startOfDay(for: selectedDate)
+        let endDate = Calendar.current.date(byAdding: .day, value: 1, to: startDate)!
+        let predicate = HKQuery.predicateForSamples(withStart: startDate, end: endDate, options: .strictStartDate)
+        
+        let query = HKSampleQuery(sampleType: heartRateType, predicate: predicate, limit: HKObjectQueryNoLimit, sortDescriptors: nil) { _, samples, error in
+            guard let samples = samples as? [HKQuantitySample], error == nil else {
+                noDataMessage = "Ошибка при получении данных о пульсе."
+                return
+            }
+            
+            let heartRates = samples.map { ($0.startDate, $0.quantity.doubleValue(for: HKUnit(from: "count/min"))) }
+            DispatchQueue.main.async {
+                self.heartRates = heartRates
+                self.isGraphVisible = !heartRates.isEmpty
+                self.noDataMessage = heartRates.isEmpty ? "Нет данных о пульсе за выбранный день." : ""
+            }
+        }
+        
+        healthStore.execute(query)
+    }
+    
     func fetchSleepData(for selectedDate: Date) {
-        let fileManager = FileManager.default
-        let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
-        let finalDatabaseURL = documentsDirectory.appendingPathComponent("Sleepy1.db")
+        let sleepType = HKCategoryType.categoryType(forIdentifier: .sleepAnalysis)!
+        let startDate = Calendar.current.startOfDay(for: selectedDate)
+        let endDate = Calendar.current.date(byAdding: .day, value: 1, to: startDate)!
+        let predicate = HKQuery.predicateForSamples(withStart: startDate, end: endDate, options: .strictStartDate)
         
-        let db = try! Connection(finalDatabaseURL.path, readonly: true)
-        
-        let statistic = Table("Statistic")
-        let idAlarm = Expression<Int64>("IdAlarm")
-        let dateAlarmExpr = Expression<String>("DateAlarm")
-        let startTimeExpr = Expression<String>("StartTime")
-        let endTimeExpr = Expression<String>("EndTime")
-        
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd"
-        
-        let timeFormatter = DateFormatter()
-        timeFormatter.dateFormat = "HH:mm:ss"
-        
-        let displayTimeFormatter = DateFormatter()
-        displayTimeFormatter.dateFormat = "HH:mm"
-        
-        let selectedDateString = dateFormatter.string(from: selectedDate)
-        print("Выбранная дата: \(selectedDateString)")
-        
-        let query = statistic.select(startTimeExpr, endTimeExpr)
-            .where(dateAlarmExpr == selectedDateString)
-            .order(idAlarm.desc)
-            .limit(1)
-        
-        do {
-            if let row = try db.pluck(query) {
-                if let startTimeDate = timeFormatter.date(from: row[startTimeExpr]),
-                   let endTimeDate = timeFormatter.date(from: row[endTimeExpr]) {
-                    self.startTime = displayTimeFormatter.string(from: startTimeDate)
-                    self.endTime = displayTimeFormatter.string(from: endTimeDate)
-                    calculateSleepHours(startTime: self.startTime, endTime: self.endTime)
-                    self.isGraphVisible = true
-                } else {
-                    self.noDataMessage = "Нет данных"
-                    self.isGraphVisible = false
-                    
+        let query = HKSampleQuery(sampleType: sleepType, predicate: predicate, limit: 1, sortDescriptors: [NSSortDescriptor(key: HKSampleSortIdentifierEndDate, ascending: false)]) { _, samples, error in
+            guard let samples = samples as? [HKCategorySample], error == nil else {
+                noDataMessage = "Ошибка при получении данных о сне."
+                return
+            }
+            
+            if let sample = samples.first {
+                let interval = sample.endDate.timeIntervalSince(sample.startDate)
+                var sleepIntervals: [Date] = []
+                var currentTime = sample.startDate
+                
+                while currentTime <= sample.endDate {
+                    sleepIntervals.append(currentTime)
+                    currentTime = Calendar.current.date(byAdding: .hour, value: 1, to: currentTime)!
+                }
+                
+                DispatchQueue.main.async {
+                    self.sleepIntervals = sleepIntervals
+                    self.isGraphVisible = !sleepIntervals.isEmpty
+                    self.noDataMessage = sleepIntervals.isEmpty ? "Нет данных о сне за выбранный день." : ""
                 }
             } else {
-                self.noDataMessage = "Нет данных"
-                self.isGraphVisible = false
-                
+                DispatchQueue.main.async {
+                    self.noDataMessage = "Нет данных о сне за выбранный день."
+                    self.isGraphVisible = false
+                }
             }
-        } catch {
-            print("Ошибка при выборке данных: \(error)")
-            self.noDataMessage = "Нет данных"
-            self.isGraphVisible = false
         }
         
+        healthStore.execute(query)
     }
+}
+
+struct PulseGraph: Shape {
+    var heartRates: [(time: Date, rate: Double)]
     
-    func calculateSleepHours(startTime: String, endTime: String) {
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "HH:mm"
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
         
-        guard let startTimeDate = dateFormatter.date(from: startTime),
-              let endTimeDate = dateFormatter.date(from: endTime) else {
-            self.sleepHours = "Недостаточно данных"
-            return
-        }
-        
-        var duration = Calendar.current.dateComponents([.minute], from: startTimeDate, to: endTimeDate).minute ?? 0
-        
-        if duration < 0 {
-            // Добавляем 24 часа (1440 минут), если время окончания меньше времени начала
-            duration += 1440
-        }
-        
-        // Проверка на минимальную продолжительность сна
-        if duration < 30 {
-            self.sleepHours = "Сон длился меньше 30 минут"
-            return
-        }
-        
-        let hours = duration / 60
-        let interval = hours > 12 ? 2 : 1 // Интервал в часах для отображения текста
-        
-        var sleepHoursString = ""
-        var currentHour = Int(startTime.prefix(2))! // Текущий час начала сна
-        let endHour = Int(endTime.prefix(2))! // Час окончания сна
-        
-        while true {
-            sleepHoursString += "\(currentHour)"
-            
-            if currentHour == endHour {
-                break
-            }
-            
-            currentHour += interval // Увеличиваем на интервал
-            
-            if currentHour > 23 {
-                currentHour -= 24 // Если текущий час больше 23, переходим на следующий день
-            }
-            
-            sleepHoursString += " "
-        }
-        
-        self.sleepHours = sleepHoursString.trimmingCharacters(in: .whitespaces)
-    }
-    
-    
-    struct SleepGraph: Shape {
-        var startTime: String
-        var endTime: String
-        
-        func path(in rect: CGRect) -> Path {
-            var path = Path()
-            
-            // Конвертация времени в координаты для графика
-            let startComponents = startTime.split(separator: ":").compactMap { Int($0) }
-            let endComponents = endTime.split(separator: ":").compactMap { Int($0) }
-            
-            guard startComponents.count == 2, endComponents.count == 2 else {
-                return path
-            }
-            
-            let startHour = CGFloat(startComponents[0])
-            let startMinutes = CGFloat(startComponents[1])
-            let endHour = CGFloat(endComponents[0])
-            let endMinutes = CGFloat(endComponents[1])
-            
-            let sleepDuration = calculateDuration(startTime: startTime, endTime: endTime)
-            
-            // Если продолжительность сна меньше 30 минут, не строим график
-            guard sleepDuration >= 30 else {
-                return path
-            }
-            
-            // Расчет начальной и конечной точек для графика
-            let xOffset: CGFloat = 10 // Изменено с учетом отступов фигуры
-            let yOffset: CGFloat = rect.height / (24 * 60)
-            let startPointY = rect.maxY - (startHour * 60 + startMinutes) * yOffset
-            let endPointY = rect.maxY - (endHour * 60 + endMinutes) * yOffset
-            
-            // Убедимся, что точки находятся внутри фигуры
-            let startPoint = CGPoint(x: rect.minX + xOffset, y: max(startPointY, rect.minY))
-            let endPoint = CGPoint(x: rect.maxX - xOffset, y: min(endPointY, rect.maxY))
-            
-            // Рисование фигуры вокруг графика волн
-            path.move(to: CGPoint(x: rect.minX, y: rect.minY))
-            path.addLine(to: CGPoint(x: rect.minX, y: rect.maxY))
-            path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
-            path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY))
-            
-            // Расчет высоты волны (глубины сна)
-            let waveHeight = rect.height / 12 // Высота волны до уровня "гл. фазы сна"
-            let midPointY = rect.maxY - waveHeight // Уровень "гл. фазы сна"
-            let cycleLength = 110 * yOffset // Длина одного цикла сна (1,5 часа)
-
-            // Рисование волн внутри фигуры
-            path.move(to: startPoint)
-            var currentX = startPoint.x
-            let endX = endPoint.x
-            var isUp = false // Начинаем с волны, идущей вниз
-
-            while currentX < endX - cycleLength {
-                let nextX = currentX + cycleLength
-                // Поднимаем контрольную точку еще выше
-                let controlPointY = isUp ? (rect.minY + (midPointY - rect.minY) / 2) : rect.maxY
-                
-                let nextPoint = CGPoint(x: nextX, y: midPointY)
-                let controlPoint = CGPoint(x: (currentX + nextX) / 2, y: controlPointY)
-                
-                path.addQuadCurve(to: nextPoint, control: controlPoint)
-                
-                currentX = nextX
-                isUp.toggle() // Меняем направление волны
-            }
-
-            // Рисование последней волны до конечной точки
-            let lastWaveLength = endX - currentX
-            // Поднимаем контрольную точку последней волны еще выше
-            let lastControlPointY = isUp ? (rect.minY + (midPointY - rect.minY) / 2) : rect.maxY
-            let lastNextPoint = CGPoint(x: endX, y: startPoint.y)
-            let lastControlPoint = CGPoint(x: currentX + lastWaveLength / 2, y: lastControlPointY)
-
-            path.addQuadCurve(to: lastNextPoint, control: lastControlPoint)
-
+        guard heartRates.count > 1 else {
             return path
         }
         
-        // Функция для расчета продолжительности сна
-        func calculateDuration(startTime: String, endTime: String) -> Int {
-            let dateFormatter = DateFormatter()
-            dateFormatter.dateFormat = "HH:mm"
-            guard let start = dateFormatter.date(from: startTime),
-                  let end = dateFormatter.date(from: endTime) else {
-                return 0
-            }
-            
-            var duration = Calendar.current.dateComponents([.minute], from: start, to: end).minute ?? 0
-            if duration < 0 { duration += 1440 } // Добавляем 24 часа при переходе через полночь
-            return duration
+        let maxY = rect.maxY
+        let minY = rect.minY
+        let stepX = rect.width / CGFloat(heartRates.count - 1)
+        let maxHeartRate = heartRates.map { $0.rate }.max() ?? 0
+        let minHeartRate = heartRates.map { $0.rate }.min() ?? 0
+        let range = maxHeartRate - minHeartRate
+        
+        let points = heartRates.enumerated().map { index, heartRate -> CGPoint in
+            let x = CGFloat(index) * stepX
+            let y = maxY - (CGFloat((heartRate.rate - minHeartRate) / range) * rect.height)
+            return CGPoint(x: x, y: y)
         }
+        
+        path.move(to: CGPoint(x: rect.minX, y: minY))
+        path.addLine(to: points.first!)
+        points.dropFirst().forEach { path.addLine(to: $0) }
+        path.addLine(to: CGPoint(x: rect.maxX, y: minY))
+        
+        // Добавляем фигуру, чтобы график был ограничен внутри
+        path.addLine(to: CGPoint(x: rect.maxX, y: maxY))
+        path.addLine(to: CGPoint(x: rect.minX, y: maxY))
+        path.closeSubpath()
+        
+        return path
     }
-
-    }
+}
 
 struct GraphicViewAsset_Previews: PreviewProvider {
-    static var previews: some SwiftUI.View {
+    static var previews: some View {
         GraphicViewAsset(selectedDate: .constant(Date()))
+            .background(Color.black)
     }
 }

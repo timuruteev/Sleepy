@@ -22,6 +22,20 @@ struct TimerView: SwiftUI.View {
     let timer = Timer.publish(every: 0.0001, on: .main, in: .common).autoconnect()
     let notificationCenter = NotificationCenter.default
 
+    func requestNotificationAuthorization() {
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
+            if granted {
+                print("Разрешение на уведомления получено.")
+            } else {
+                print("Разрешение на уведомления не получено.")
+            }
+
+            if let error = error {
+                print("Ошибка при запросе разрешения на уведомления: \(error.localizedDescription)")
+            }
+        }
+    }
+
     func updateEndTime() {
         guard let cancelTime = cancelTime else { return }
         
@@ -143,6 +157,7 @@ struct TimerView: SwiftUI.View {
                     .foregroundColor(.white)
                     .padding()
                     .onAppear {
+                        requestNotificationAuthorization()
                         let formatter = DateFormatter()
                         formatter.dateFormat = "HH:mm"
                         let dateString = formatter.string(from: wakeUpTime)

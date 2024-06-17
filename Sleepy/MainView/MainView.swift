@@ -5,6 +5,10 @@ import SQLite
 struct MainView: SwiftUI.View {
     @State private var selectedTab = 0
 
+    init() {
+        copyDatabaseAndSoundsIfNeeded()
+    }
+
     var body: some SwiftUI.View {
         ZStack {
             TabView(selection: $selectedTab) {
@@ -13,14 +17,58 @@ struct MainView: SwiftUI.View {
                 SecondAlarm()
                     .tag(1)
             }
-            .background(.black)
-            .tabViewStyle(.page)
+            .background(Color.black)
+            .tabViewStyle(PageTabViewStyle())
             VStack {
                 Spacer()
             }
         }
     }
-}
+
+    func copyDatabaseAndSoundsIfNeeded() {
+            let fileManager = FileManager.default
+            let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
+            let finalDatabaseURL = documentsDirectory.appendingPathComponent("Sleepy1.db")
+            let finalSoundsDirectory = documentsDirectory.appendingPathComponent("Sounds")
+
+            // Copy database if it doesn't exist
+            if !fileManager.fileExists(atPath: finalDatabaseURL.path) {
+                if let bundleDatabaseURL = Bundle.main.url(forResource: "Sleepy1", withExtension: "db") {
+                    do {
+                        try fileManager.copyItem(at: bundleDatabaseURL, to: finalDatabaseURL)
+                        print("Database copied to documents directory at path: \(finalDatabaseURL.path)")
+                    } catch {
+                        print("Error copying database: \(error)")
+                    }
+                } else {
+                    print("Database not found in bundle")
+                }
+            } else {
+                print("Database already exists at path: \(finalDatabaseURL.path)")
+            }
+
+            // Copy sounds folder if it doesn't exist
+            if !fileManager.fileExists(atPath: finalSoundsDirectory.path) {
+                if let bundleSoundsURL = Bundle.main.resourceURL?.appendingPathComponent("Sounds") {
+                    do {
+                        try fileManager.createDirectory(at: finalSoundsDirectory, withIntermediateDirectories: true, attributes: nil)
+                        let soundFiles = try fileManager.contentsOfDirectory(at: bundleSoundsURL, includingPropertiesForKeys: nil, options: [])
+                        for file in soundFiles {
+                            let destinationURL = finalSoundsDirectory.appendingPathComponent(file.lastPathComponent)
+                            try fileManager.copyItem(at: file, to: destinationURL)
+                        }
+                        print("Sounds directory copied to documents directory at path: \(finalSoundsDirectory.path)")
+                    } catch {
+                        print("Error copying sounds directory: \(error)")
+                    }
+                } else {
+                    print("Sounds directory not found in bundle")
+                }
+            } else {
+                print("Sounds directory already exists at path: \(finalSoundsDirectory.path)")
+            }
+        }
+    }
 
 class isPlayed {
     static var isPlaying = false
