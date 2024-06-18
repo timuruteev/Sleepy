@@ -8,11 +8,12 @@ struct QualityViewAsset: SwiftUI.View {
     @State private var endTime: String = "00:00"
     @State private var timeInBed: String = "0ч 0мин"
     @State private var timeAsleep: String = "0ч 0мин"
+    @State private var averageHeartRate: String = "Нет данных"
     private let healthStore = HKHealthStore()
 
     func requestAuthorization() {
         let typesToShare: Set = Set(arrayLiteral: HKObjectType.categoryType(forIdentifier: .sleepAnalysis)!)
-        let typesToRead: Set = Set(arrayLiteral: HKObjectType.categoryType(forIdentifier: .sleepAnalysis)!)
+        let typesToRead: Set = Set(arrayLiteral: HKObjectType.categoryType(forIdentifier: .sleepAnalysis)!, HKObjectType.quantityType(forIdentifier: .heartRate)!)
 
         healthStore.requestAuthorization(toShare: typesToShare, read: typesToRead) { (success, error) in
             if !success {
@@ -36,6 +37,7 @@ struct QualityViewAsset: SwiftUI.View {
                     self.endTime = "Нет данных"
                     self.timeInBed = "Нет данных"
                     self.timeAsleep = "Нет данных"
+                    self.averageHeartRate = "Нет данных"
                 }
                 return
             }
@@ -67,6 +69,9 @@ struct QualityViewAsset: SwiftUI.View {
                         self.timeAsleep = "0ч 0мин"
                     }
                 }
+
+                // Получение среднего пульса за время сна
+                self.fetchAverageHeartRate(start: result.startDate, end: result.endDate)
             }
         }
 
@@ -91,6 +96,28 @@ struct QualityViewAsset: SwiftUI.View {
         }
     }
 
+    func fetchAverageHeartRate(start: Date, end: Date) {
+        let heartRateType = HKQuantityType.quantityType(forIdentifier: .heartRate)!
+        let predicate = HKQuery.predicateForSamples(withStart: start, end: end, options: .strictStartDate)
+        
+        let query = HKSampleQuery(sampleType: heartRateType, predicate: predicate, limit: HKObjectQueryNoLimit, sortDescriptors: nil) { _, samples, error in
+            guard let samples = samples as? [HKQuantitySample], error == nil else {
+                DispatchQueue.main.async {
+                    self.averageHeartRate = "Нет данных"
+                }
+                return
+            }
+            
+            let heartRates = samples.map { $0.quantity.doubleValue(for: HKUnit(from: "count/min")) }
+            let average = heartRates.reduce(0, +) / Double(heartRates.count)
+            DispatchQueue.main.async {
+                self.averageHeartRate = heartRates.isEmpty ? "Нет данных" : String(format: "%.0f", average)
+            }
+        }
+        
+        healthStore.execute(query)
+    }
+
     var body: some SwiftUI.View {
         HStack {
             HStack() {
@@ -104,16 +131,24 @@ struct QualityViewAsset: SwiftUI.View {
                         .foregroundColor(.gray)
                 }
                 Spacer()
-                HStack() {
-                    VStack(alignment: .leading) {
-                        Text(timeAsleep)
-                            .font(.title)
-                            .bold()
-                            .foregroundColor(.white)
-                        Text("Во сне")
-                            .font(.headline)
-                            .foregroundColor(.gray)
-                    }
+                VStack(alignment: .leading) {
+                    Text(timeAsleep)
+                        .font(.title)
+                        .bold()
+                        .foregroundColor(.white)
+                    Text("Во сне")
+                        .font(.headline)
+                        .foregroundColor(.gray)
+                }
+                Spacer()
+                VStack(alignment: .leading) {
+                    Text(averageHeartRate)
+                        .font(.title)
+                        .bold()
+                        .foregroundColor(.white)
+                    Text("ср. пульс")
+                        .font(.headline)
+                        .foregroundColor(.gray)
                 }
             }
         }
