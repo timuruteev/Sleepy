@@ -15,26 +15,28 @@ struct GraphicViewAsset: View {
             ZStack {
                 if isGraphVisible && !heartRates.isEmpty {
                     HStack(spacing: 2) {
-                        VStack(spacing: 2) {
+                        VStack {
                             Text("Не сон")
                                 .font(.system(size: 14))
                                 .foregroundColor(.white)
+                                .alignmentGuide(.top) { d in d[.bottom] } // Поднятие "Сон" к верхней линии
+                                .padding(.top, -10)
                             Spacer()
                             Text("Сон")
                                 .font(.system(size: 14))
                                 .foregroundColor(.white)
+                                .alignmentGuide(.bottom) { d in d[.top] } // Поднятие "Не сон" к нижней линии
+                                .padding(.bottom, 5)
                         }
                         .frame(height: 200)
 
                         VStack {
                             ZStack {
-                                // Background shape with 50% opacity
                                 PulseGraphBackground(heartRates: heartRates)
                                     .stroke(Color.blue.opacity(0.5), lineWidth: 2)
                                     .frame(height: 200)
                                     .padding(.horizontal, 5)
                                 
-                                // Graph shape
                                 PulseGraph(heartRates: heartRates)
                                     .stroke(Color.blue, lineWidth: 2)
                                     .frame(height: 200)
