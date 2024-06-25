@@ -1,3 +1,4 @@
+// Определение структуры данных статьи
 import SwiftUI
 
 struct Article: Identifiable {
@@ -5,48 +6,96 @@ struct Article: Identifiable {
     var imageURL: URL
     var title: String
     var description: String
+    var detailText: String // Добавлено для детального текста каждой статьи
 }
 
-
+// Окно просмотра статей
 struct ArticleView: View {
     let articles = [
-        Article(imageURL: URL(string: "https://4brain.ru/blog/wp-content/uploads/2021/03/polifaznyj-son-mozhno-li-sohranjat-effektivnost-tratja-na-son-vsego-2-chasa-v-den.png")!, title: "Влияние сна на здоровье", description: "Обсуждение о том, как качество и количество сна влияют на физическое и психическое здоровье."),
-        Article(imageURL: URL(string: "https://img.freepik.com/premium-vector/healthy-sleep-background_1284-71517.jpg")!, title: "Сон и питание", description: "Исследование связи между рационом питания и качеством сна."),
-        Article(imageURL: URL(string: "https://medobr.com/upload/iblock/543/hand_drawn_world_sleep_day_illustration_with_woman_resting_23_2148842993.jpg-_740_740_-_-Google-Chrome-_1_.jpeg")!, title: "Сонники и их значение", description: "История и интерпретация сновидений у сонников и не только."),
+        Article(
+            imageURL: URL(string: "https://img.freepik.com/free-vector/insomnia-concept-illustration_23-2148658718.jpg?t=st=1719306554~exp=1719310154~hmac=904dc565a74a906b69499735a278d2345886431fce3c7412c513929d668c9e68&w=2000")!,
+            title: "Влияние сна на здоровье",
+            description: "Подробный анализ взаимосвязи качественного сна и здоровья человека.",
+            detailText: "Длительный и качественный сон влияет на многие аспекты здоровья, включая улучшение иммунной функции, уменьшение риска развития хронических заболеваний, таких как диабет и сердечно-сосудистые заболевания. Недостаточное количество сна ассоциируется с ухудшением когнитивных функций и увеличением эмоциональной реактивности. Кроме того, регулярный полноценный сон может значительно улучшить настроение и уровень стресса, тем самым повышая общее качество жизни."
+        ),
+        Article(
+            imageURL: URL(string: "https://img.freepik.com/free-vector/insomnia-concept-illustration_23-2148665007.jpg?t=st=1719306584~exp=1719310184~hmac=87c5e1a9ccb47dfc0da9f688b409447ab3ad9247302fc271655a2fbe814cd13f&w=2000")!,
+            title: "Сон и питание",
+            description: "Разбор того, как пищевые привычки влияют на сон и наоборот.",
+            detailText: "Сбалансированное питание играет ключевую роль в регулировании качества сна. Потребление продуктов, богатых магнием, таких как шпинат и миндаль, может улучшить качество сна за счёт снижения уровня стресса. Кроме того, употребление большого количества сахара и жирной пищи перед сном может нарушать сон, вызывая прерывистость и снижение его глубины. В то время как определённые продукты могут способствовать улучшению сна, такие как молочные продукты, содержащие триптофан, который способствует выработке мелатонина."
+        ),
+        Article(
+            imageURL: URL(string: "https://img.freepik.com/free-vector/hand-drawn-mouth-tape-illustration_52683-156030.jpg?t=st=1719306739~exp=1719310339~hmac=c31afb1d34ec28917a98933899b48feb2d224b336b6ce182b6228a09a9fd5629&w=1380")!,
+            title: "Сонники и их значение",
+            description: "Обзор культурных и психологических аспектов толкования снов.",
+            detailText: "Сонники — это культурные и исторические артефакты, которые использовались для интерпретации снов в разных культурах. Например, в древнем Египте считалось, что сны являются сообщениями от богов. Современная психология также признает, что сны могут отражать наши подсознательные мысли и чувства, обрабатывая эмоциональные переживания дня. Интерпретация снов может помочь в самопознании и решении психологических проблем, хотя научное сообщество предостерегает от слишком буквального толкования символов сна."
+        ),
+        Article(
+            imageURL: URL(string: "https://img.freepik.com/free-vector/personal-hygiene-concept_1284-13564.jpg?t=st=1719305575~exp=1719309175~hmac=65a6df246d5014828cd856b9bb5660619fd93308a553fad44fd9abd04b13c90e&w=1380")!,
+            title: "Основы гигиены сна",
+            description: "Важность режима и условий для качественного сна.",
+            detailText: "Регулярный сон в одно и то же время каждый день, создание комфортной среды для сна и отказ от кратковременных решений, таких как алкоголь и кофе перед сном, являются важными элементами гигиены сна. Эти меры способствуют установлению здоровых сновидений и поддержанию качественного сна на протяжении всей ночи."
+        ),
+        Article(
+            imageURL: URL(string: "https://img.freepik.com/free-vector/insomnia-concept_23-2148653852.jpg?t=st=1719305630~exp=1719309230~hmac=c3fb2519828e0712a05e491e46191a5674968dce95ffbdb964cfc6a361dcf859&w=2000")!,
+            title: "Методы улучшения качества сна",
+            description: "Практические советы и техники, например, релаксация перед сном.",
+            detailText: "Практические методы для улучшения качества сна включают в себя установление регулярного режима сна, использование техник релаксации, таких как медитация и глубокое дыхание, и создание спокойной атмосферы перед сном. Эти подходы помогают снизить стресс и тревожность, улучшить качество сна и общее самочувствие."
+        ),
+        Article(
+            imageURL: URL(string: "https://img.freepik.com/free-vector/woman-counting-sheep-insomnia-concept_23-2148655247.jpg?t=st=1719305799~exp=1719309399~hmac=085c73767909656b0c8b78e1a82ef1ff0eb4b32c2a67104a08fb3f9827980182&w=2000")!,
+            title: "Технологии для сна",
+            description: "Обзор современных устройств и приложений для мониторинга и улучшения сна.",
+            detailText: "Современные технологии включают в себя умные часы и приложения для мониторинга сна, которые анализируют данные о сне, такие как длительность и качество, предоставляют рекомендации для улучшения сна и поддерживают регулярный режим сна. Эти технологии помогают пользователям осознать и улучшить свои сновидения для общего благополучия и здоровья."
+        ),
+        Article(
+            imageURL: URL(string: "https://img.freepik.com/free-vector/insomnia-concept-with-clock_23-2148656507.jpg?t=st=1719305883~exp=1719309483~hmac=f5ecccb21761fa590e586810547d2fc5a12dc31c11dff57993a96b9032af627a&w=2000")!,
+            title: "Сон и продуктивность",
+            description: "Как хороший сон влияет на эффективность в течение дня.",
+            detailText: "Хороший сон играет важную роль в обеспечении эффективности и продуктивности в течение дня. Регулярный полноценный сон способствует повышению концентрации, когнитивных способностей и эмоциональной стабильности, что в свою очередь улучшает общую работоспособность и производительность на работе или в учёбе."
+        ),
+        Article(
+            imageURL: URL(string: "https://img.freepik.com/free-vector/insomnia-concept-illustrated_23-2148644670.jpg?t=st=1719305951~exp=1719309551~hmac=a249307bc392ad3686379de4aa9ba920e6e8a0b70c39cbc02e26b2b7be345d81&w=2000")!,
+            title: "Борьба с бессонницей",
+            description: "Общие методы и техники для тех, кто страдает от бессонницы.",
+            detailText: "Бессонница может иметь серьезные последствия для здоровья и благополучия. Подходы к лечению включают в себя установление регулярного режима сна, создание комфортной атмосферы для сна, использование релаксационных техник и, в некоторых случаях, консультацию с врачом для назначения лечебных мероприятий или терапии. Эффективная борьба с бессонницей помогает улучшить качество жизни и общее самочувствие."
+        )
     ]
+
     @State private var selectedArticle: Article?
-    
-    
+
     var body: some View {
-        List(articles) { article in
-            VStack(alignment: .leading) {
-                AsyncImage(url: article.imageURL) { image in
-                    image.resizable()
-                } placeholder: {
-                    ProgressView()
+            List(articles) { article in
+                VStack(alignment: .leading) {
+                    AsyncImage(url: article.imageURL) { image in
+                        image.resizable()
+                            .aspectRatio(contentMode: .fill) // Измените здесь на .fill
+                    } placeholder: {
+                        ProgressView()
+                    }
+                    .frame(height: 200)
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                    Text(article.title)
+                        .font(.headline)
+                    Text(article.description)
+                        .font(.subheadline)
                 }
-                .clipShape(RoundedRectangle(cornerRadius: 10)) // Закругление углов
-                .aspectRatio(contentMode: .fit)
-                .frame(height: 200)
-                Text(article.title)
-                    .font(.headline)
-                Text(article.description)
-                    .font(.subheadline)
+                .padding(.bottom, 20)
+                .onTapGesture {
+                    selectedArticle = article
+                }
             }
-            .padding(.bottom, 20)
-            .onTapGesture {
-                selectedArticle = article
-            }
-        }
         .sheet(item: $selectedArticle) { article in
             ArticleDetailViewAsset(article: article)
         }
-        
         .navigationBarTitle("Статьи", displayMode: .automatic)
-        .preferredColorScheme(.dark) // Модификатор для темной темы
+        .preferredColorScheme(.dark)
     }
 }
 
+// Окно детального просмотра статьи
+
+// Предпросмотр интерфейса
 struct ArticleView_Previews: PreviewProvider {
     static var previews: some View {
         ArticleView()
